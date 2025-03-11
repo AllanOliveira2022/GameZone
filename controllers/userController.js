@@ -1,86 +1,79 @@
-import User from '../models/user.js';
-import UserRepository from '../repositories/userRepository.js';
+// controllers/authController.js
 
-export const getUserById = (req, res) => {
-  const { id } = req.params;
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
 
-  const user = userRepository.getById(Number(id));
+dotenv.config();
+const db = require('../models/index.js');
 
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  res.json(user);
-};
-
-export const listUsers = (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-
-  let users = userRepository.getAll();
-
-  const start = (page - 1) * limit;
-  const paginatedUsers = users.slice(start, start + parseInt(limit));
-
-  res.json({ total: users.length, page, limit, data: paginatedUsers });
-};
-
-export const createUser = async (req, res) => {
-  const { name, dateBirth, email, phone, address, buyID, password } = req.body;
-
-  if (!name || !dateBirth || !email || !phone || !address || !buyID || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  const existingUser = await userRepository.getByEmailOrPhone(email, phone);
-  if (existingUser) {
-    return res.status(400).json({ error: 'Email or phone already exists' });
-  }
-
-  const newUser = new User(null, name, dateBirth, email, phone, address, buyID, password);
-  const addedUser = userRepository.add(newUser);
-
-  res.status(201).json(addedUser);
-};
-
-export const updateUser = async (req, res) => {
-  const { id } = req.params;
-  const { name, dateBirth, email, phone, address, buyID, password } = req.body;
-
-  const userToUpdate = await userRepository.getById(Number(id));
-
-  if (!userToUpdate) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  const updatedUser = await userRepository.update(id, { name, dateBirth, email, phone, address, buyID, password: password || userToUpdate.password });
-
-  res.json(updatedUser);
-};
-
-export const deleteUser = (req, res) => {
-  const { id } = req.params;
-
-  const deletedUser = userRepository.delete(Number(id));
-
-  if (!deletedUser) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  res.status(204).send();
-};
-
-export const loginUser = async (req, res) => {
+// Função para login
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await userRepository.getByEmail(email);
+  try {
+    // Busca o usuário pelo email
+    const user = await db.User.findOne({ where: { email } });
 
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    // Verifica se a senha está correta
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Senha inválida' });
+    }
+
+    // Gera o token JWT
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '1h', // Token expira em 1 hora
+    });
+
+    res.status(200).json({ message: 'Login bem-sucedido', token });
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    res.status(500).json({ message: 'Erro ao fazer login' });
   }
+};
 
-  if (user.password !== password) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+// Função para cadastro de usuário
+export const signUp = async (req, res) => {
+  const { name, email, dateBirth, phone, address, password } = req.body;
+
+  try {
+    // Verifica se o usuário já existe
+    const existingUser = await db.User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Usuário já existe' });
+    }
+
+    // Cria o novo usuário
+    const newUser = await db.User.create({ name, email, dateBirth, phone, address, password });
+
+    // Retorna o usuário criado (sem a senha)
+    const user = newUser.get({ plain: true });
+    delete user.password;
+
+    res.status(201).json({ message: 'Usuário criado com sucesso', user });
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    res.status(500).json({ message: 'Erro ao criar usuário' });
   }
+};
 
-  res.json({ user });
+// Função para listar todos os usuários
+export const listUsers = async (req, res) => {
+  try {
+    // Busca todos os usuários no banco de dados
+    const users = await db.User.findAll({
+      attributes: { exclude: ['password'] }, // Exclui a senha do retorno
+    });
+
+    res.status(200).json({ message: 'Lista de usuários recuperada com sucesso', users });
+  } catch (error) {
+    console.error('Erro ao listar usuários:', error);
+    res.status(500).json({ message: 'Erro ao listar usuários' });
+  }
 };
