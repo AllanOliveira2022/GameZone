@@ -7,28 +7,24 @@ import dotenv from 'dotenv';
 dotenv.config();
 const db = require('../models/index.js');
 
-// Função para login
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Busca o usuário pelo email
     const user = await db.User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    // Verifica se a senha está correta
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Senha inválida' });
     }
 
-    // Gera o token JWT
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '1h', // Token expira em 1 hora
+      expiresIn: '1h',
     });
 
     res.status(200).json({ message: 'Login bem-sucedido', token });
@@ -38,21 +34,17 @@ export const login = async (req, res) => {
   }
 };
 
-// Função para cadastro de usuário
 export const signUp = async (req, res) => {
   const { name, email, dateBirth, phone, address, password } = req.body;
 
   try {
-    // Verifica se o usuário já existe
     const existingUser = await db.User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: 'Usuário já existe' });
     }
 
-    // Cria o novo usuário
     const newUser = await db.User.create({ name, email, dateBirth, phone, address, password });
 
-    // Retorna o usuário criado (sem a senha)
     const user = newUser.get({ plain: true });
     delete user.password;
 
@@ -63,12 +55,10 @@ export const signUp = async (req, res) => {
   }
 };
 
-// Função para listar todos os usuários
 export const listUsers = async (req, res) => {
   try {
-    // Busca todos os usuários no banco de dados
     const users = await db.User.findAll({
-      attributes: { exclude: ['password'] }, // Exclui a senha do retorno
+      attributes: { exclude: ['password'] },
     });
 
     res.status(200).json({ message: 'Lista de usuários recuperada com sucesso', users });
