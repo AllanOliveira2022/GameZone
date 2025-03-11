@@ -1,5 +1,5 @@
-import express from 'express';
-import {getAvaliationById, listAvaliations, createAvaliation, updateAvaliation, deleteAvaliation,} from '../controllers/avaliationController.js';
+/*import express from 'express';
+//import {getAvaliationById, listAvaliations, createAvaliation, updateAvaliation, deleteAvaliation,} from '../controllers/avaliationController.js';
 
 const router = express.Router();
 
@@ -9,4 +9,4 @@ router.post('/avaliations', createAvaliation);
 router.put('/avaliations/:id', updateAvaliation);
 router.delete('/avaliations/:id', deleteAvaliation);
 
-export default router;
+export default router;*/

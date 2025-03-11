@@ -1,9 +1,9 @@
 import express from 'express';
-import gameRoutes from './routes/gameRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 
 app.use(express.json());
-app.use('/api', gameRoutes);
+app.use('/api', userRoutes);
 
 export default app;

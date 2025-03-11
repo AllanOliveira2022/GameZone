@@ -39,7 +39,7 @@ module.exports = {
       role: { // Adicionando role ao modelo
         type: Sequelize.STRING,
         allowNull: false,
-        defaultValue: 'user', // Default 'user' caso não seja informado
+         // Default 'user' caso não seja informado
       },
       createdAt: { // Timestamps
         allowNull: false,

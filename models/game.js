@@ -1,8 +1,8 @@
 'use strict';
 
-const { DataTypes } = require("sequelize");
+import { DataTypes } from 'sequelize';
 
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize) => {
 
     const Game = sequelize.define('Game', {
         id: {
@@ -37,7 +37,7 @@ module.exports = (sequelize, DataTypes) => {
           },
         },
         price: {
-          type: DataTypes.DECIMAL[10, 2],
+          type: DataTypes.DECIMAL(10, 2),
           allowNull: false
         },
         platformID:{

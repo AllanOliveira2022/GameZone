@@ -1,5 +1,5 @@
-import express from 'express';
-import { getPlatformById, listPlatforms, createPlatform, updatePlatform, deletePlatform } from '../controllers/platformController.js';
+/*import express from 'express';
+//import { getPlatformById, listPlatforms, createPlatform, updatePlatform, deletePlatform } from '../controllers/platformController.js';
 
 const router = express.Router();
 
@@ -9,4 +9,4 @@ router.post('/platforms', createPlatform);
 router.put('/platforms/:id', updatePlatform);
 router.delete('/platforms/:id', deletePlatform);
 
-export default router;
+export default router;*/

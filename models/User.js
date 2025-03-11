@@ -1,9 +1,9 @@
 'use strict';
 
-const { DataTypes } = require("sequelize");
-const bcrypt = require('bcrypt');  // Importando o bcrypt
+import { DataTypes } from 'sequelize';
+import bcrypt from 'bcrypt';
 
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize) => {
   const User = sequelize.define('User', {
     id: {
       type: DataTypes.INTEGER,
@@ -52,8 +52,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     role: {
       type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'user',  // Default 'user' caso não seja informado
+      allowNull: false,  // Default 'user' caso não seja informado
     }
   });
 
