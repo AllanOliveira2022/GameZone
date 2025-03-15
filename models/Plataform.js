@@ -1,24 +1,23 @@
 'use strict';
 
-const { DataTypes } = require("sequelize");
+import { DataTypes } from 'sequelize';
 
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
+  const Platform = sequelize.define('Platform', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+  });
 
-    const Platform = sequelize.define('Platform', {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-        },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        }
-    });
+  Platform.associate = (models) => {
+    Platform.hasMany(models.Game, { foreignKey: 'PlatformID' });
+  };
 
-    Platform.associate = (models) => {
-        Platform.hasMany(models.Game, { foreignKey: 'PlatformID' });
-    }
-
-    return Platform;
-}
+  return Platform;
+};

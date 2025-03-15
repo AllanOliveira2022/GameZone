@@ -1,68 +1,118 @@
-import Game from '../models/game.js';
-import GameRepository from '../repositories/gameRepository.js';
+import db from '../models/index.js';
 
-export const getGameById = (req, res) => {
+// Busca um jogo pelo ID
+export const getGameById = async (req, res) => {
   const { id } = req.params;
 
-  const game = gameRepository.getById(Number(id));
-
-  if (!game) {
-    return res.status(404).json({ error: 'Game not found' });
+  try {
+    const game = await db.Game.findByPk(id);
+    if (!game) {
+      return res.status(404).json({ message: 'Jogo não encontrado' });
+    }
+    res.status(200).json({ message: 'Jogo recuperado com sucesso', game });
+  } catch (error) {
+    console.error('Erro ao buscar jogo por ID:', error);
+    res.status(500).json({ message: 'Erro ao buscar jogo por ID' });
   }
-
-  res.json(game);
 };
 
-export const listGames = (req, res) => {
+// Lista todos os jogos com paginação e filtro por categoria
+export const listGames = async (req, res) => {
   const { category, page = 1, limit = 10 } = req.query;
 
-  let games = gameRepository.getAll();
+  try {
+    const whereClause = {};
+    if (category) {
+      whereClause.category = category; // Filtra por categoria, se fornecida
+    }
 
-  if (category) {
-    games = games.filter(game =>
-      game.getCategory().toLowerCase() === category.toLowerCase()
-    );
+    const games = await db.Game.findAndCountAll({
+      where: whereClause, // Aplica o filtro de categoria
+      offset: (page - 1) * limit, // Calcula o offset para paginação
+      limit: parseInt(limit), // Define o limite de resultados por página
+    });
+
+    res.status(200).json({
+      message: 'Jogos recuperados com sucesso',
+      total: games.count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: games.rows,
+    });
+  } catch (error) {
+    console.error('Erro ao listar jogos:', error);
+    res.status(500).json({ message: 'Erro ao listar jogos' });
   }
-
-  const start = (page - 1) * limit;
-  const paginatedGames = games.slice(start, start + parseInt(limit));
-
-  res.json({ total: games.length, page, limit, data: paginatedGames });
 };
 
-export const createGame = (req, res) => {
+// Cria um novo jogo
+export const createGame = async (req, res) => {
+  const { name, description, price, genreID, platformID, developerID, avaliationID, buyID } = req.body;
+
+  try {
+    // Validação dos dados
+    if (!name || !description || !price || !genreID || !platformID || !developerID || !avaliationID || !buyID) {
+      return res.status(400).json({ message: 'Todos os campos são obrigatórios!' });
+    }
+
+    // Cria o jogo no banco de dados
+    const newGame = await db.Game.create({
+      name,
+      description,
+      price,
+      genreID,
+      platformID,
+      developerID,
+      avaliationID,
+      buyID,
+    });
+
+    res.status(201).json({ message: 'Jogo criado com sucesso', game: newGame });
+  } catch (error) {
+    console.error('Erro ao criar jogo:', error);
+    res.status(500).json({ message: 'Erro ao criar jogo' });
+  }
+};
+
+// Atualiza um jogo existente
+export const updateGame = async (req, res) => {
+  const { id } = req.params;
   const { name, category, price } = req.body;
 
-  if (!name || !category || !price) {
-    return res.status(400).json({ error: 'Name, category, and price are required!' });
-  }
+  try {
+    // Busca o jogo pelo ID
+    const gameToUpdate = await db.Game.findByPk(id);
+    if (!gameToUpdate) {
+      return res.status(404).json({ message: 'Jogo não encontrado' });
+    }
 
-  const newGame = new Game(null, name, category, price);
-  const addedGame = gameRepository.add(newGame);
-  res.status(201).json(addedGame);
+    // Atualiza o jogo
+    gameToUpdate.name = name || gameToUpdate.name;
+    gameToUpdate.category = category || gameToUpdate.category;
+    gameToUpdate.price = price || gameToUpdate.price;
+    await gameToUpdate.save();
+
+    res.status(200).json({ message: 'Jogo atualizado com sucesso', game: gameToUpdate });
+  } catch (error) {
+    console.error('Erro ao atualizar jogo:', error);
+    res.status(500).json({ message: 'Erro ao atualizar jogo' });
+  }
 };
 
-export const updateGame = (req, res) => {
-  const id = parseInt(req.params.id);
-  const { name, category, price } = req.body;
+// Deleta um jogo
+export const deleteGame = async (req, res) => {
+  const { id } = req.params;
 
-  const updatedGame = gameRepository.update(id, { name, category, price });
+  try {
+    const gameToDelete = await db.Game.findByPk(id);
+    if (!gameToDelete) {
+      return res.status(404).json({ message: 'Jogo não encontrado' });
+    }
 
-  if (!updatedGame) {
-    return res.status(404).json({ error: 'Game not found!' });
+    await gameToDelete.destroy();
+    res.status(200).json({ message: 'Jogo deletado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar jogo:', error);
+    res.status(500).json({ message: 'Erro ao deletar jogo' });
   }
-
-  res.json(updatedGame);
-};
-
-export const deleteGame = (req, res) => {
-  const id = parseInt(req.params.id);
-
-  const deletedGame = gameRepository.delete(id);
-
-  if (!deletedGame) {
-    return res.status(404).json({ error: 'Game not found!' });
-  }
-
-  res.status(204).send();
 };

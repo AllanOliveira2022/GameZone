@@ -1,65 +1,101 @@
-import Buy from '../models/buy.js';
-import BuyRepository from '../repositories/buyRepository.js';
+import db from '../models/index.js';
 
+// Busca uma compra pelo ID
 export const getBuyById = async (req, res) => {
   const { id } = req.params;
 
-  const buy = await BuyRepository.getById(Number(id));
-
-  if (!buy) {
-    return res.status(404).json({ error: 'Buy not found' });
+  try {
+    const buy = await db.Buy.findByPk(id);
+    if (!buy) {
+      return res.status(404).json({ message: 'Compra não encontrada' });
+    }
+    res.status(200).json({ message: 'Compra recuperada com sucesso', buy });
+  } catch (error) {
+    console.error('Erro ao buscar compra por ID:', error);
+    res.status(500).json({ message: 'Erro ao buscar compra por ID' });
   }
-
-  res.json(buy);
 };
 
+// Lista todas as compras com paginação
 export const listBuys = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
-  let buys = await BuyRepository.getAll();
+  try {
+    const buys = await db.Buy.findAndCountAll({
+      offset: (page - 1) * limit, // Calcula o offset para paginação
+      limit: parseInt(limit), // Define o limite de resultados por página
+    });
 
-  const start = (page - 1) * limit;
-  const paginatedBuys = buys.slice(start, start + parseInt(limit));
-
-  res.json({ total: buys.length, page, limit, data: paginatedBuys });
+    res.status(200).json({
+      message: 'Compras recuperadas com sucesso',
+      total: buys.count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: buys.rows,
+    });
+  } catch (error) {
+    console.error('Erro ao listar compras:', error);
+    res.status(500).json({ message: 'Erro ao listar compras' });
+  }
 };
 
+// Cria uma nova compra
 export const createBuy = async (req, res) => {
   const { price, dateBuy } = req.body;
 
-  if (!price || !dateBuy) {
-    return res.status(400).json({ error: 'Price and dateBuy are required' });
+  try {
+    // Validação dos dados
+    if (!price || !dateBuy) {
+      return res.status(400).json({ message: 'Price e dateBuy são obrigatórios' });
+    }
+
+    // Cria a compra no banco de dados
+    const newBuy = await db.Buy.create({ price, dateBuy });
+    res.status(201).json({ message: 'Compra criada com sucesso', buy: newBuy });
+  } catch (error) {
+    console.error('Erro ao criar compra:', error);
+    res.status(500).json({ message: 'Erro ao criar compra' });
   }
-
-  const newBuy = new Buy(null, price, dateBuy);
-  const addedBuy = await BuyRepository.add(newBuy);
-
-  res.status(201).json(addedBuy);
 };
 
+// Atualiza uma compra existente
 export const updateBuy = async (req, res) => {
   const { id } = req.params;
   const { price, dateBuy } = req.body;
 
-  const buyToUpdate = await BuyRepository.getById(Number(id));
+  try {
+    // Busca a compra pelo ID
+    const buyToUpdate = await db.Buy.findByPk(id);
+    if (!buyToUpdate) {
+      return res.status(404).json({ message: 'Compra não encontrada' });
+    }
 
-  if (!buyToUpdate) {
-    return res.status(404).json({ error: 'Buy not found' });
+    // Atualiza a compra
+    buyToUpdate.price = price || buyToUpdate.price;
+    buyToUpdate.dateBuy = dateBuy || buyToUpdate.dateBuy;
+    await buyToUpdate.save();
+
+    res.status(200).json({ message: 'Compra atualizada com sucesso', buy: buyToUpdate });
+  } catch (error) {
+    console.error('Erro ao atualizar compra:', error);
+    res.status(500).json({ message: 'Erro ao atualizar compra' });
   }
-
-  const updatedBuy = await BuyRepository.update(id, { price, dateBuy });
-
-  res.json(updatedBuy);
 };
 
+// Deleta uma compra
 export const deleteBuy = async (req, res) => {
   const { id } = req.params;
 
-  const deletedBuy = await BuyRepository.delete(Number(id));
+  try {
+    const buyToDelete = await db.Buy.findByPk(id);
+    if (!buyToDelete) {
+      return res.status(404).json({ message: 'Compra não encontrada' });
+    }
 
-  if (!deletedBuy) {
-    return res.status(404).json({ error: 'Buy not found' });
+    await buyToDelete.destroy();
+    res.status(200).json({ message: 'Compra deletada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar compra:', error);
+    res.status(500).json({ message: 'Erro ao deletar compra' });
   }
-
-  res.status(204).send();
 };

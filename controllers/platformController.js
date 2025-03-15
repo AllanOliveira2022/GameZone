@@ -1,65 +1,100 @@
-import Platform from '../models/platform.js';
-import PlatformRepository from '../repositories/platformRepository.js';
+import db from '../models/index.js';
 
+// Busca uma plataforma pelo ID
 export const getPlatformById = async (req, res) => {
   const { id } = req.params;
 
-  const platform = await PlatformRepository.getById(Number(id));
-
-  if (!platform) {
-    return res.status(404).json({ error: 'Platform not found' });
+  try {
+    const platform = await db.Platform.findByPk(id);
+    if (!platform) {
+      return res.status(404).json({ message: 'Plataforma não encontrada' });
+    }
+    res.status(200).json({ message: 'Plataforma recuperada com sucesso', platform });
+  } catch (error) {
+    console.error('Erro ao buscar plataforma por ID:', error);
+    res.status(500).json({ message: 'Erro ao buscar plataforma por ID' });
   }
-
-  res.json(platform);
 };
 
+// Lista todas as plataformas com paginação
 export const listPlatforms = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
-  let platforms = await PlatformRepository.getAll();
+  try {
+    const platforms = await db.Platform.findAndCountAll({
+      offset: (page - 1) * limit, // Calcula o offset para paginação
+      limit: parseInt(limit), // Define o limite de resultados por página
+    });
 
-  const start = (page - 1) * limit;
-  const paginatedPlatforms = platforms.slice(start, start + parseInt(limit));
-
-  res.json({ total: platforms.length, page, limit, data: paginatedPlatforms });
+    res.status(200).json({
+      message: 'Plataformas recuperadas com sucesso',
+      total: platforms.count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: platforms.rows,
+    });
+  } catch (error) {
+    console.error('Erro ao listar plataformas:', error);
+    res.status(500).json({ message: 'Erro ao listar plataformas' });
+  }
 };
 
+// Cria uma nova plataforma
 export const createPlatform = async (req, res) => {
   const { name } = req.body;
 
-  if (!name) {
-    return res.status(400).json({ error: 'Name is required' });
+  try {
+    // Validação dos dados
+    if (!name) {
+      return res.status(400).json({ message: 'Nome é obrigatório' });
+    }
+
+    // Cria a plataforma no banco de dados
+    const newPlatform = await db.Platform.create({ name });
+    res.status(201).json({ message: 'Plataforma criada com sucesso', platform: newPlatform });
+  } catch (error) {
+    console.error('Erro ao criar plataforma:', error);
+    res.status(500).json({ message: 'Erro ao criar plataforma' });
   }
-
-  const newPlatform = new Platform(null, name);
-  const addedPlatform = await PlatformRepository.add(newPlatform);
-
-  res.status(201).json(addedPlatform);
 };
 
+// Atualiza uma plataforma existente
 export const updatePlatform = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
 
-  const platformToUpdate = await PlatformRepository.getById(Number(id));
+  try {
+    // Busca a plataforma pelo ID
+    const platformToUpdate = await db.Platform.findByPk(id);
+    if (!platformToUpdate) {
+      return res.status(404).json({ message: 'Plataforma não encontrada' });
+    }
 
-  if (!platformToUpdate) {
-    return res.status(404).json({ error: 'Platform not found' });
+    // Atualiza a plataforma
+    platformToUpdate.name = name || platformToUpdate.name;
+    await platformToUpdate.save();
+
+    res.status(200).json({ message: 'Plataforma atualizada com sucesso', platform: platformToUpdate });
+  } catch (error) {
+    console.error('Erro ao atualizar plataforma:', error);
+    res.status(500).json({ message: 'Erro ao atualizar plataforma' });
   }
-
-  const updatedPlatform = await PlatformRepository.update(id, { name });
-
-  res.json(updatedPlatform);
 };
 
+// Deleta uma plataforma
 export const deletePlatform = async (req, res) => {
   const { id } = req.params;
 
-  const deletedPlatform = await PlatformRepository.delete(Number(id));
+  try {
+    const platformToDelete = await db.Platform.findByPk(id);
+    if (!platformToDelete) {
+      return res.status(404).json({ message: 'Plataforma não encontrada' });
+    }
 
-  if (!deletedPlatform) {
-    return res.status(404).json({ error: 'Platform not found' });
+    await platformToDelete.destroy();
+    res.status(200).json({ message: 'Plataforma deletada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar plataforma:', error);
+    res.status(500).json({ message: 'Erro ao deletar plataforma' });
   }
-
-  res.status(204).send();
 };

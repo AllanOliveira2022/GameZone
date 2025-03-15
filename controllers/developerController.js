@@ -1,62 +1,103 @@
-import Developer from '../models/developer.js';
-import DeveloperRepository from '../repositories/developerRepository.js';
+import db from '../models/index.js';
 
-export const getDeveloperById = (req, res) => {
+// Busca um desenvolvedor pelo ID
+export const getDeveloperById = async (req, res) => {
   const { id } = req.params;
 
-  const developer = developerRepository.getById(Number(id));
-
-  if (!developer) {
-    return res.status(404).json({ error: 'Developer not found' });
+  try {
+    const developer = await db.Developer.findByPk(id);
+    if (!developer) {
+      return res.status(404).json({ message: 'Desenvolvedor não encontrado' });
+    }
+    res.status(200).json({ message: 'Desenvolvedor recuperado com sucesso', developer });
+  } catch (error) {
+    console.error('Erro ao buscar desenvolvedor por ID:', error);
+    res.status(500).json({ message: 'Erro ao buscar desenvolvedor por ID' });
   }
-
-  res.json(developer);
 };
 
-export const listDevelopers = (req, res) => {
+// Lista todos os desenvolvedores com paginação
+export const listDevelopers = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
-  let developers = developerRepository.getAll();
+  try {
+    const developers = await db.Developer.findAndCountAll({
+      offset: (page - 1) * limit, // Calcula o offset para paginação
+      limit: parseInt(limit), // Define o limite de resultados por página
+    });
 
-  const start = (page - 1) * limit;
-  const paginatedDevelopers = developers.slice(start, start + parseInt(limit));
-
-  res.json({ total: developers.length, page, limit, data: paginatedDevelopers });
+    res.status(200).json({
+      message: 'Desenvolvedores recuperados com sucesso',
+      total: developers.count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      data: developers.rows,
+    });
+  } catch (error) {
+    console.error('Erro ao listar desenvolvedores:', error);
+    res.status(500).json({ message: 'Erro ao listar desenvolvedores' });
+  }
 };
 
-export const createDeveloper = (req, res) => {
+// Cria um novo desenvolvedor
+export const createDeveloper = async (req, res) => {
   const { name, CNPJ, email, phone } = req.body;
 
-  if (!name || !CNPJ || !email || !phone) {
-    return res.status(400).json({ error: 'Name, CNPJ, email, and phone are required!' });
-  }
+  try {
+    // Validação dos dados
+    if (!name || !CNPJ || !email || !phone) {
+      return res.status(400).json({ message: 'Nome, CNPJ, email e telefone são obrigatórios!' });
+    }
 
-  const newDeveloper = new Developer(null, name, CNPJ, email, phone);
-  const addedDeveloper = developerRepository.add(newDeveloper);
-  res.status(201).json(addedDeveloper);
+    // Cria o desenvolvedor no banco de dados
+    const newDeveloper = await db.Developer.create({ name, CNPJ, email, phone });
+    res.status(201).json({ message: 'Desenvolvedor criado com sucesso', developer: newDeveloper });
+  } catch (error) {
+    console.error('Erro ao criar desenvolvedor:', error);
+    res.status(500).json({ message: 'Erro ao criar desenvolvedor' });
+  }
 };
 
-export const updateDeveloper = (req, res) => {
-  const id = parseInt(req.params.id);
+// Atualiza um desenvolvedor existente
+export const updateDeveloper = async (req, res) => {
+  const { id } = req.params;
   const { name, CNPJ, email, phone } = req.body;
 
-  const updatedDeveloper = developerRepository.update(id, { name, CNPJ, email, phone });
+  try {
+    // Busca o desenvolvedor pelo ID
+    const developerToUpdate = await db.Developer.findByPk(id);
+    if (!developerToUpdate) {
+      return res.status(404).json({ message: 'Desenvolvedor não encontrado' });
+    }
 
-  if (!updatedDeveloper) {
-    return res.status(404).json({ error: 'Developer not found!' });
+    // Atualiza o desenvolvedor
+    developerToUpdate.name = name || developerToUpdate.name;
+    developerToUpdate.CNPJ = CNPJ || developerToUpdate.CNPJ;
+    developerToUpdate.email = email || developerToUpdate.email;
+    developerToUpdate.phone = phone || developerToUpdate.phone;
+    await developerToUpdate.save();
+
+    res.status(200).json({ message: 'Desenvolvedor atualizado com sucesso', developer: developerToUpdate });
+  } catch (error) {
+    console.error('Erro ao atualizar desenvolvedor:', error);
+    res.status(500).json({ message: 'Erro ao atualizar desenvolvedor' });
   }
-
-  res.json(updatedDeveloper);
 };
 
-export const deleteDeveloper = (req, res) => {
-  const id = parseInt(req.params.id);
+// Deleta um desenvolvedor
+export const deleteDeveloper = async (req, res) => {
+  const { id } = req.params;
 
-  const deletedDeveloper = developerRepository.delete(id);
+  try {
+    const developerToDelete = await db.Developer.findByPk(id);
+    if (!developerToDelete) {
+      return res.status(404).json({ message: 'Desenvolvedor não encontrado' });
+    }
 
-  if (!deletedDeveloper) {
-    return res.status(404).json({ error: 'Developer not found!' });
+    await developerToDelete.destroy();
+    res.status(200).json({ message: 'Desenvolvedor deletado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar desenvolvedor:', error);
+    res.status(500).json({ message: 'Erro ao deletar desenvolvedor' });
   }
-
-  res.status(204).send();
 };
