@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('Games', { // Plural name for the table
+    await queryInterface.createTable('Games', { // Nome da tabela no plural
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -14,64 +14,55 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      createdAt: { // Should be DATE, not DATEONLY if you want timestamps
-        type: Sequelize.DATE,
+      createdAt: {
+        type: Sequelize.DATEONLY,
         allowNull: false
       },
       description: {
         type: Sequelize.TEXT,
         allowNull: false
       },
-      avaliationID: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Avaliation', // Plural table name
-          key: 'id'
-        },
-        onUpdate: 'CASCADE', // Important for data integrity
-        onDelete: 'CASCADE'  // Important for data integrity
-      },
       genreID: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Genres', // Plural table name
+          model: 'Genres',
           key: 'id'
         },
-        onUpdate: 'CASCADE', // Important for data integrity
-        onDelete: 'CASCADE'  // Important for data integrity
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       price: {
-        type: Sequelize.DECIMAL(10, 2), // Correct syntax for DECIMAL
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: false
       },
       platformID: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Platforms', // Plural table name
+          model: 'Platforms',
           key: 'id'
         },
-        onUpdate: 'CASCADE', // Important for data integrity
-        onDelete: 'CASCADE'  // Important for data integrity
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       developerID: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Developers', // Plural table name
+          model: 'Developers',
           key: 'id'
         },
-        onUpdate: 'CASCADE', // Important for data integrity
-        onDelete: 'CASCADE'  // Important for data integrity
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       buyID: {
         type: Sequelize.INTEGER,
         references: {
-          model: 'Buys', // Plural table name
+          model: 'Buys',
           key: 'id'
         },
-        onUpdate: 'CASCADE', // Important for data integrity
-        onDelete: 'CASCADE'  // Important for data integrity
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
-      updatedAt: { // Timestamp
+      updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
       }
@@ -79,6 +70,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Games'); // Plural table name
+    await queryInterface.dropTable('Games');
   }
 };

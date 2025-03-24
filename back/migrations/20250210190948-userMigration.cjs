@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', { // Nome da tabela no plural
+    await queryInterface.createTable('Users', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -16,17 +16,27 @@ module.exports = {
       },
       dateBirth: {
         type: Sequelize.DATEONLY,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          isDate: true,
+        }
       },
       email: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
+        validate: {
+          isEmail: true,
+        }
       },
       phone: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
+        validate: {
+          isNumeric: true,
+          len: [10, 11]
+        }
       },
       address: {
         type: Sequelize.STRING,
@@ -34,25 +44,29 @@ module.exports = {
       },
       password: {
         type: Sequelize.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: true
+        }
+      },
+      role: {
+        type: Sequelize.STRING,
         allowNull: false
       },
-      role: { // Adicionando role ao modelo
-        type: Sequelize.STRING,
+      createdAt: {
         allowNull: false,
-         // Default 'user' caso não seja informado
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
-      createdAt: { // Timestamps
+      updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: { // Timestamps
-        allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Users'); // Nome da tabela no plural
+    await queryInterface.dropTable('Users');
   }
 };

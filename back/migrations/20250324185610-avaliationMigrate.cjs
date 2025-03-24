@@ -3,12 +3,32 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.createTable('Avaliation', {
+    await queryInterface.createTable('Avaliations', { // Nome pluralizado
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
+      },
+      userId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Users', // Nome correto da tabela de usuários
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
+      },
+      gameId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'Games', // Nome correto da tabela de jogos
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       score: {
         type: Sequelize.INTEGER,
@@ -34,6 +54,6 @@ module.exports = {
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Avaliation');
+    await queryInterface.dropTable('Avaliations');
   }
 };
