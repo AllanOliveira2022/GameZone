@@ -18,28 +18,30 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       },
-      userID: {  // Adicionando a chave estrangeira que referencia o usuário
+      userID: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Users',  // Tabela Users
-          key: 'id',  // Coluna de referência
+          model: 'Users',
+          key: 'id',
         },
-        onUpdate: 'CASCADE',  // Mantém a integridade ao atualizar a tabela Users
-        onDelete: 'CASCADE',  // Mantém a integridade ao deletar um usuário
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
-      createdAt: { // Timestamps
+      createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
-      updatedAt: { // Timestamps
+      updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
       }
     });
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable('Buys');  // Dropando a tabela Buys
+    await queryInterface.dropTable('Buys');
   }
 };
