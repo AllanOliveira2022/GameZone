@@ -1,11 +1,34 @@
 import db from '../models/index.js';
 
-// Busca uma compra pelo ID
+// Busca uma compra pelo ID com itens
 export const getBuyById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const buy = await db.Buy.findByPk(id);
+    const buy = await db.Buy.findByPk(id, {
+      include: [
+        { 
+          model: db.ItemJogo, 
+          as: 'itensCompra',
+          include: [
+            { 
+              model: db.Game, 
+              as: 'jogo',
+              include: [
+                { model: db.Genre },
+                { model: db.Platform },
+                { model: db.Developer }
+              ]
+            }
+          ]
+        },
+        { 
+          model: db.User, 
+          as: 'comprador' 
+        }
+      ]
+    });
+
     if (!buy) {
       return res.status(404).json({ message: 'Compra não encontrada' });
     }
@@ -16,14 +39,25 @@ export const getBuyById = async (req, res) => {
   }
 };
 
-// Lista todas as compras com paginação
+// Lista todas as compras com paginação e relacionamentos
 export const listBuys = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
   try {
     const buys = await db.Buy.findAndCountAll({
-      offset: (page - 1) * limit, // Calcula o offset para paginação
-      limit: parseInt(limit), // Define o limite de resultados por página
+      offset: (page - 1) * limit,
+      limit: parseInt(limit),
+      include: [
+        { 
+          model: db.ItemJogo, 
+          as: 'itensCompra',
+          include: [{ model: db.Game, as: 'jogo' }]
+        },
+        { 
+          model: db.User, 
+          as: 'comprador' 
+        }
+      ]
     });
 
     res.status(200).json({
@@ -39,20 +73,56 @@ export const listBuys = async (req, res) => {
   }
 };
 
-// Cria uma nova compra
+// Cria uma nova compra com seus itens
 export const createBuy = async (req, res) => {
-  const { price, dateBuy } = req.body;
+  const { userID, dateBuy, items } = req.body;
+
+  const transaction = await db.sequelize.transaction();
 
   try {
     // Validação dos dados
-    if (!price || !dateBuy) {
-      return res.status(400).json({ message: 'Price e dateBuy são obrigatórios' });
+    if (!userID || !dateBuy || !items || items.length === 0) {
+      return res.status(400).json({ message: 'Dados da compra incompletos' });
     }
 
+    // Calcular preço total
+    const totalPrice = items.reduce((total, item) => total + parseFloat(item.priceBuy), 0);
+
     // Cria a compra no banco de dados
-    const newBuy = await db.Buy.create({ price, dateBuy });
-    res.status(201).json({ message: 'Compra criada com sucesso', buy: newBuy });
+    const newBuy = await db.Buy.create({ 
+      userID, 
+      dateBuy, 
+      price: totalPrice 
+    }, { transaction });
+
+    // Cria os itens da compra
+    const buyItems = items.map(item => ({
+      buyID: newBuy.id,
+      gameID: item.gameID,
+      priceBuy: item.priceBuy
+    }));
+
+    await db.ItemJogo.bulkCreate(buyItems, { transaction });
+
+    await transaction.commit();
+
+    // Busca a compra completa para retornar
+    const completeBuy = await db.Buy.findByPk(newBuy.id, {
+      include: [
+        { 
+          model: db.ItemJogo, 
+          as: 'itensCompra',
+          include: [{ model: db.Game, as: 'jogo' }]
+        }
+      ]
+    });
+
+    res.status(201).json({ 
+      message: 'Compra criada com sucesso', 
+      buy: completeBuy 
+    });
   } catch (error) {
+    await transaction.rollback();
     console.error('Erro ao criar compra:', error);
     res.status(500).json({ message: 'Erro ao criar compra' });
   }
@@ -61,7 +131,9 @@ export const createBuy = async (req, res) => {
 // Atualiza uma compra existente
 export const updateBuy = async (req, res) => {
   const { id } = req.params;
-  const { price, dateBuy } = req.body;
+  const { dateBuy, items } = req.body;
+
+  const transaction = await db.sequelize.transaction();
 
   try {
     // Busca a compra pelo ID
@@ -70,13 +142,54 @@ export const updateBuy = async (req, res) => {
       return res.status(404).json({ message: 'Compra não encontrada' });
     }
 
-    // Atualiza a compra
-    buyToUpdate.price = price || buyToUpdate.price;
+    // Atualiza a data da compra
     buyToUpdate.dateBuy = dateBuy || buyToUpdate.dateBuy;
-    await buyToUpdate.save();
 
-    res.status(200).json({ message: 'Compra atualizada com sucesso', buy: buyToUpdate });
+    // Atualiza o preço total
+    if (items && items.length > 0) {
+      const totalPrice = items.reduce((total, item) => total + parseFloat(item.priceBuy), 0);
+      buyToUpdate.price = totalPrice;
+    }
+
+    await buyToUpdate.save({ transaction });
+
+    // Se novos itens forem fornecidos, atualiza os itens da compra
+    if (items && items.length > 0) {
+      // Remove itens antigos
+      await db.ItemJogo.destroy({
+        where: { buyID: id },
+        transaction
+      });
+
+      // Cria novos itens
+      const buyItems = items.map(item => ({
+        buyID: id,
+        gameID: item.gameID,
+        priceBuy: item.priceBuy
+      }));
+
+      await db.ItemJogo.bulkCreate(buyItems, { transaction });
+    }
+
+    await transaction.commit();
+
+    // Busca a compra atualizada
+    const updatedBuy = await db.Buy.findByPk(id, {
+      include: [
+        { 
+          model: db.ItemJogo, 
+          as: 'itensCompra',
+          include: [{ model: db.Game, as: 'jogo' }]
+        }
+      ]
+    });
+
+    res.status(200).json({ 
+      message: 'Compra atualizada com sucesso', 
+      buy: updatedBuy 
+    });
   } catch (error) {
+    await transaction.rollback();
     console.error('Erro ao atualizar compra:', error);
     res.status(500).json({ message: 'Erro ao atualizar compra' });
   }
@@ -85,6 +198,7 @@ export const updateBuy = async (req, res) => {
 // Deleta uma compra
 export const deleteBuy = async (req, res) => {
   const { id } = req.params;
+  const transaction = await db.sequelize.transaction();
 
   try {
     const buyToDelete = await db.Buy.findByPk(id);
@@ -92,10 +206,29 @@ export const deleteBuy = async (req, res) => {
       return res.status(404).json({ message: 'Compra não encontrada' });
     }
 
-    await buyToDelete.destroy();
+    // Primeiro deleta os itens da compra
+    await db.ItemJogo.destroy({
+      where: { buyID: id },
+      transaction
+    });
+
+    // Depois deleta a compra
+    await buyToDelete.destroy({ transaction });
+
+    await transaction.commit();
+
     res.status(200).json({ message: 'Compra deletada com sucesso' });
   } catch (error) {
+    await transaction.rollback();
     console.error('Erro ao deletar compra:', error);
     res.status(500).json({ message: 'Erro ao deletar compra' });
   }
+};
+
+export default {
+  getBuyById,
+  listBuys,
+  createBuy,
+  updateBuy,
+  deleteBuy
 };
