@@ -40,8 +40,8 @@ export default (sequelize) => {
     });
 
     Avaliation.associate = (models) => {
-        Avaliation.belongsTo(models.User, { foreignKey: 'userId' });
-        Avaliation.belongsTo(models.Game, { foreignKey: 'gameId' });
+        Avaliation.belongsTo(models.User, { foreignKey: 'id' });
+        Avaliation.belongsTo(models.Game, { foreignKey: 'id' });
     };
 
     return Avaliation;

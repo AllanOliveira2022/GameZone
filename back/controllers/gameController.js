@@ -1,11 +1,31 @@
 import db from '../models/index.js';
 
-// Busca um jogo pelo ID
+// Busca um jogo pelo ID com relacionamentos
 export const getGameById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const game = await db.Game.findByPk(id);
+    const game = await db.Game.findByPk(id, {
+      include: [
+        { model: db.Genre },
+        { model: db.Platform },
+        { model: db.Developer },
+        { 
+          model: db.Avaliation, 
+          include: [{ model: db.User }] 
+        },
+        { 
+          model: db.ItemJogo, 
+          as: 'itensVenda',
+          include: [{ 
+            model: db.Buy, 
+            as: 'compra',
+            include: [{ model: db.User, as: 'comprador' }]
+          }]
+        }
+      ]
+    });
+
     if (!game) {
       return res.status(404).json({ message: 'Jogo não encontrado' });
     }
@@ -16,20 +36,43 @@ export const getGameById = async (req, res) => {
   }
 };
 
-// Lista todos os jogos com paginação e filtro por categoria
+// Lista todos os jogos com paginação e filtros
 export const listGames = async (req, res) => {
-  const { category, page = 1, limit = 10 } = req.query;
+  const { 
+    genreID, 
+    platformID, 
+    developerID, 
+    minPrice, 
+    maxPrice, 
+    page = 1, 
+    limit = 10 
+  } = req.query;
 
   try {
     const whereClause = {};
-    if (category) {
-      whereClause.category = category; // Filtra por categoria, se fornecida
+    
+    // Filtros
+    if (genreID) whereClause.genreID = genreID;
+    if (platformID) whereClause.platformID = platformID;
+    if (developerID) whereClause.developerID = developerID;
+    
+    // Filtro de preço
+    if (minPrice || maxPrice) {
+      whereClause.price = {};
+      if (minPrice) whereClause.price[db.Sequelize.Op.gte] = minPrice;
+      if (maxPrice) whereClause.price[db.Sequelize.Op.lte] = maxPrice;
     }
 
     const games = await db.Game.findAndCountAll({
-      where: whereClause, // Aplica o filtro de categoria
-      offset: (page - 1) * limit, // Calcula o offset para paginação
-      limit: parseInt(limit), // Define o limite de resultados por página
+      where: whereClause,
+      include: [
+        { model: db.Genre },
+        { model: db.Platform },
+        { model: db.Developer }
+      ],
+      offset: (page - 1) * limit,
+      limit: parseInt(limit),
+      order: [['createdAt', 'DESC']]
     });
 
     res.status(200).json({
@@ -47,11 +90,19 @@ export const listGames = async (req, res) => {
 
 // Cria um novo jogo
 export const createGame = async (req, res) => {
-  const { name, description, price, genreID, platformID, developerID} = req.body;
+  const { 
+    name, 
+    description, 
+    price, 
+    genreID, 
+    platformID, 
+    developerID,
+    createdAt
+  } = req.body;
 
   try {
     // Validação dos dados
-    if (!name || !description || !price || !genreID || !platformID || !developerID) {
+    if (!name || !description || !price || !genreID || !platformID || !developerID || !createdAt) {
       return res.status(400).json({ message: 'Todos os campos são obrigatórios!' });
     }
 
@@ -63,9 +114,22 @@ export const createGame = async (req, res) => {
       genreID,
       platformID,
       developerID,
+      createdAt
     });
 
-    res.status(201).json({ message: 'Jogo criado com sucesso', game: newGame });
+    // Busca o jogo completo com relacionamentos
+    const createdGame = await db.Game.findByPk(newGame.id, {
+      include: [
+        { model: db.Genre },
+        { model: db.Platform },
+        { model: db.Developer }
+      ]
+    });
+
+    res.status(201).json({ 
+      message: 'Jogo criado com sucesso', 
+      game: createdGame 
+    });
   } catch (error) {
     console.error('Erro ao criar jogo:', error);
     res.status(500).json({ message: 'Erro ao criar jogo' });
@@ -75,7 +139,14 @@ export const createGame = async (req, res) => {
 // Atualiza um jogo existente
 export const updateGame = async (req, res) => {
   const { id } = req.params;
-  const { name, category, price } = req.body;
+  const { 
+    name, 
+    description, 
+    price, 
+    genreID, 
+    platformID, 
+    developerID 
+  } = req.body;
 
   try {
     // Busca o jogo pelo ID
@@ -86,11 +157,27 @@ export const updateGame = async (req, res) => {
 
     // Atualiza o jogo
     gameToUpdate.name = name || gameToUpdate.name;
-    gameToUpdate.category = category || gameToUpdate.category;
+    gameToUpdate.description = description || gameToUpdate.description;
     gameToUpdate.price = price || gameToUpdate.price;
+    gameToUpdate.genreID = genreID || gameToUpdate.genreID;
+    gameToUpdate.platformID = platformID || gameToUpdate.platformID;
+    gameToUpdate.developerID = developerID || gameToUpdate.developerID;
+
     await gameToUpdate.save();
 
-    res.status(200).json({ message: 'Jogo atualizado com sucesso', game: gameToUpdate });
+    // Busca o jogo atualizado com relacionamentos
+    const updatedGame = await db.Game.findByPk(id, {
+      include: [
+        { model: db.Genre },
+        { model: db.Platform },
+        { model: db.Developer }
+      ]
+    });
+
+    res.status(200).json({ 
+      message: 'Jogo atualizado com sucesso', 
+      game: updatedGame 
+    });
   } catch (error) {
     console.error('Erro ao atualizar jogo:', error);
     res.status(500).json({ message: 'Erro ao atualizar jogo' });
@@ -100,6 +187,7 @@ export const updateGame = async (req, res) => {
 // Deleta um jogo
 export const deleteGame = async (req, res) => {
   const { id } = req.params;
+  const transaction = await db.sequelize.transaction();
 
   try {
     const gameToDelete = await db.Game.findByPk(id);
@@ -107,10 +195,35 @@ export const deleteGame = async (req, res) => {
       return res.status(404).json({ message: 'Jogo não encontrado' });
     }
 
-    await gameToDelete.destroy();
+    // Primeiro deleta os itens de compra relacionados
+    await db.ItemJogo.destroy({
+      where: { gameID: id },
+      transaction
+    });
+
+    // Deleta as avaliações relacionadas
+    await db.Avaliation.destroy({
+      where: { gameID: id },
+      transaction
+    });
+
+    // Depois deleta o jogo
+    await gameToDelete.destroy({ transaction });
+
+    await transaction.commit();
+
     res.status(200).json({ message: 'Jogo deletado com sucesso' });
   } catch (error) {
+    await transaction.rollback();
     console.error('Erro ao deletar jogo:', error);
     res.status(500).json({ message: 'Erro ao deletar jogo' });
   }
+};
+
+export default {
+  getGameById,
+  listGames,
+  createGame,
+  updateGame,
+  deleteGame
 };

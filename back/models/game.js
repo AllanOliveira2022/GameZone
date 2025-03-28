@@ -45,25 +45,20 @@ export default (sequelize) => {
                 model: 'Developers',
                 key: 'id'
             },
-        },
-        buyID: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'Buys',
-                key: 'id'
-            },
         }
     });
 
-    // Definir associações dentro de um único bloco
+    // Definir associações
     Game.associate = (models) => {
         Game.belongsTo(models.Genre, { foreignKey: 'genreID' });
         Game.belongsTo(models.Platform, { foreignKey: 'platformID' });
         Game.belongsTo(models.Developer, { foreignKey: 'developerID' });
-        Game.belongsTo(models.Buy, { foreignKey: 'buyID' });
+
+        // Um jogo pode estar em várias compras através de ItemJogo
+        Game.hasMany(models.ItemJogo, { foreignKey: 'gameID', as: 'itensVenda' });
 
         // Um jogo pode ter várias avaliações
-        Game.hasMany(models.Avaliation, { foreignKey: 'gameId' });
+        Game.hasMany(models.Avaliation, { foreignKey: 'gameID' });
     };
 
     return Game;

@@ -3,7 +3,6 @@
 import { DataTypes } from 'sequelize';
 
 export default (sequelize) => {
-
     const Buy = sequelize.define('Buy', {
         id: {
             type: DataTypes.INTEGER,
@@ -18,22 +17,22 @@ export default (sequelize) => {
             type: DataTypes.DATE,
             allowNull: false,
         },
-        userID: {  // A chave estrangeira que referencia o usuário
+        userID: {  
             type: DataTypes.INTEGER,
             references: {
-                model: 'Users',  // Referência à tabela Users
+                model: 'Users',  
                 key: 'id',
             },
-            allowNull: false,  // Não permite que uma compra não tenha um usuário associado
+            allowNull: false,  
         }
     });
 
     Buy.associate = (models) => {
-        // Um Buy tem muitos Games, mas agora Buy pertence a um único User
-        Buy.hasMany(models.Game, { foreignKey: 'buyID' });
+        // Corrigir a relação: Buy tem muitos ItemJogo, não Games diretamente
+        Buy.hasMany(models.ItemJogo, { foreignKey: 'buyID', as: 'itensCompra' });
 
         // Relacionamento: uma compra pertence a um usuário
-        Buy.belongsTo(models.User, { foreignKey: 'userID' });
+        Buy.belongsTo(models.User, { foreignKey: 'userID', as: 'comprador' });
     };
 
     return Buy;

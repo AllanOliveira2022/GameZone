@@ -2,12 +2,12 @@ import db from '../models/index.js';
 
 // Cria uma nova avaliação
 export const createAvaliation = async (req, res) => {
-  const { score, comment } = req.body;
+  const { userId, gameId, score, comment } = req.body;
 
   try {
     // Validação dos dados
-    if (!score || !comment) {
-      return res.status(400).json({ message: 'Score e comment são obrigatórios' });
+    if (!userId || !gameId || !score || !comment) {
+      return res.status(400).json({ message: 'userId, gameId, score e comment são obrigatórios' });
     }
 
     if (score < 1 || score > 5) {
@@ -15,7 +15,7 @@ export const createAvaliation = async (req, res) => {
     }
 
     // Cria a avaliação no banco de dados
-    const newAvaliation = await db.Avaliation.create({ score, comment });
+    const newAvaliation = await db.Avaliation.create({ userId, gameId, score, comment });
     res.status(201).json({ message: 'Avaliação criada com sucesso', avaliation: newAvaliation });
   } catch (error) {
     console.error('Erro ao criar avaliação:', error);
@@ -23,10 +23,21 @@ export const createAvaliation = async (req, res) => {
   }
 };
 
-// Lista todas as avaliações
+// Lista todas as avaliações com os dados dos usuários e jogos relacionados
 export const getAllAvaliations = async (req, res) => {
   try {
-    const avaliations = await db.Avaliation.findAll();
+    const avaliations = await db.Avaliation.findAll({
+      include: [
+        {
+          model: db.User, // Incluir os dados do usuário
+          attributes: ['id', 'name'], // Atributos que você quer retornar
+        },
+        {
+          model: db.Game, // Incluir os dados do jogo
+          attributes: ['id', 'title'], // Atributos que você quer retornar
+        },
+      ],
+    });
     res.status(200).json({ message: 'Avaliações recuperadas com sucesso', avaliations });
   } catch (error) {
     console.error('Erro ao listar avaliações:', error);
@@ -34,12 +45,23 @@ export const getAllAvaliations = async (req, res) => {
   }
 };
 
-// Busca uma avaliação pelo ID
+// Busca uma avaliação pelo ID, incluindo dados do usuário e jogo
 export const getAvaliationById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const avaliation = await db.Avaliation.findByPk(id);
+    const avaliation = await db.Avaliation.findByPk(id, {
+      include: [
+        {
+          model: db.User,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: db.Game,
+          attributes: ['id', 'title'],
+        },
+      ],
+    });
     if (!avaliation) {
       return res.status(404).json({ message: 'Avaliação não encontrada' });
     }
@@ -64,7 +86,17 @@ export const getAvaliationsByComment = async (req, res) => {
         comment: {
           [db.Sequelize.Op.like]: `%${comment}%`
         }
-      }
+      },
+      include: [
+        {
+          model: db.User,
+          attributes: ['id', 'name'],
+        },
+        {
+          model: db.Game,
+          attributes: ['id', 'title'],
+        },
+      ],
     });
     res.status(200).json({ message: 'Avaliações recuperadas com sucesso', avaliations });
   } catch (error) {
@@ -76,7 +108,7 @@ export const getAvaliationsByComment = async (req, res) => {
 // Atualiza uma avaliação existente
 export const updateAvaliation = async (req, res) => {
   const { id } = req.params;
-  const { score, comment } = req.body;
+  const { userId, gameId, score, comment } = req.body;
 
   try {
     // Validação do score
@@ -91,6 +123,8 @@ export const updateAvaliation = async (req, res) => {
     }
 
     // Atualiza a avaliação
+    avaliation.userId = userId || avaliation.userId;
+    avaliation.gameId = gameId || avaliation.gameId;
     avaliation.score = score || avaliation.score;
     avaliation.comment = comment || avaliation.comment;
     await avaliation.save();
