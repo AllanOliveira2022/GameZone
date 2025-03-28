@@ -5,9 +5,21 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+:root {
+  --primary-color: #26ff00; /* Verde neon principal */
+  --secondary-color: #32e514; /* Tom ligeiramente mais escuro */
+  --accent-color: #1fcc00; /* Cor de destaque */
+  --background-color: #101010; /* Fundo muito escuro */
+  --background-color2: #1a1a1a; /* Fundo médio escuro */
+  --background-color3: #272727; /* Fundo pouco escuro */
+  --text-color: #e7ffea; /* Texto em verde claro para contraste */
 }
