@@ -11,9 +11,7 @@ const GameCard = ({ game }) => {
 
   return (
     <Card 
-      sx={{ 
-        maxWidth: 345, 
-        m: 2,
+      sx={{
         backgroundColor: "var(--background-color2)", 
         color: "var(--text-color)", 
         cursor: "pointer", 
