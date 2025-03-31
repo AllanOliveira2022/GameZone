@@ -3,11 +3,17 @@ import db from '../models/index.js';
 // Busca uma compra pelo ID com itens
 export const getBuyById = async (req, res) => {
   const { id } = req.params;
-  const userID = req.user?.id; // Pegando o ID do usuário autenticado (ajuste conforme sua autenticação)
+  const userID = req.user?.id; // Obtendo o ID do usuário autenticado
 
   try {
+    // Busca a compra pelo ID e inclui o comprador
     const buy = await db.Buy.findByPk(id, {
       include: [
+        { 
+          model: db.User, 
+          as: 'comprador',
+          attributes: ['id'] // Inclui apenas o ID do comprador para verificação
+        },
         { 
           model: db.ItemJogo, 
           as: 'itensCompra',
@@ -22,10 +28,6 @@ export const getBuyById = async (req, res) => {
               ]
             }
           ]
-        },
-        { 
-          model: db.User, 
-          as: 'comprador' 
         }
       ]
     });
@@ -34,10 +36,9 @@ export const getBuyById = async (req, res) => {
       return res.status(404).json({ message: 'Compra não encontrada' });
     }
 
-    // Verifica se o usuário que fez a requisição é o dono da compra
-    if (buy.userID !== userID) {
-      return res.status(403).json({ message: 'Acesso negado: você não tem permissão para visualizar esta compra'});
-      console.log(userID);
+    // Verifica se o usuário autenticado é o comprador
+    if (buy.comprador.id !== userID) {
+      return res.status(403).json({ message: 'Acesso negado: você só pode visualizar suas próprias compras' });
     }
 
     res.status(200).json({ message: 'Compra recuperada com sucesso', buy });
@@ -46,6 +47,7 @@ export const getBuyById = async (req, res) => {
     res.status(500).json({ message: 'Erro ao buscar compra por ID' });
   }
 };
+
 
 
 // Lista todas as compras com paginação e relacionamentos
