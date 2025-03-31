@@ -3,6 +3,7 @@ import db from '../models/index.js';
 // Busca uma compra pelo ID com itens
 export const getBuyById = async (req, res) => {
   const { id } = req.params;
+  const userID = req.user?.id; // Pegando o ID do usuário autenticado (ajuste conforme sua autenticação)
 
   try {
     const buy = await db.Buy.findByPk(id, {
@@ -32,12 +33,20 @@ export const getBuyById = async (req, res) => {
     if (!buy) {
       return res.status(404).json({ message: 'Compra não encontrada' });
     }
+
+    // Verifica se o usuário que fez a requisição é o dono da compra
+    if (buy.userID !== userID) {
+      return res.status(403).json({ message: 'Acesso negado: você não tem permissão para visualizar esta compra'});
+      console.log(userID);
+    }
+
     res.status(200).json({ message: 'Compra recuperada com sucesso', buy });
   } catch (error) {
     console.error('Erro ao buscar compra por ID:', error);
     res.status(500).json({ message: 'Erro ao buscar compra por ID' });
   }
 };
+
 
 // Lista todas as compras com paginação e relacionamentos
 export const listBuys = async (req, res) => {
@@ -85,17 +94,39 @@ export const createBuy = async (req, res) => {
       return res.status(400).json({ message: 'Dados da compra incompletos' });
     }
 
+    // Obter todos os IDs dos jogos fornecidos
+    const gameIDs = items.map(item => item.gameID);
+
+    // Buscar os jogos no banco de dados
+    const existingGames = await db.Game.findAll({
+      where: { id: gameIDs }
+    });
+
+    // Criar um conjunto de IDs de jogos existentes
+    const existingGameIDs = new Set(existingGames.map(game => game.id));
+
+    // Verificar se todos os jogos existem
+    const invalidGames = gameIDs.filter(id => !existingGameIDs.has(id));
+
+    if (invalidGames.length > 0) {
+      await transaction.rollback();
+      return res.status(400).json({ 
+        message: 'Alguns jogos não estão cadastrados no banco', 
+        invalidGames 
+      });
+    }
+
     // Calcular preço total
     const totalPrice = items.reduce((total, item) => total + parseFloat(item.priceBuy), 0);
 
-    // Cria a compra no banco de dados
+    // Criar a compra no banco de dados
     const newBuy = await db.Buy.create({ 
       userID, 
       dateBuy, 
       price: totalPrice 
     }, { transaction });
 
-    // Cria os itens da compra
+    // Criar os itens da compra
     const buyItems = items.map(item => ({
       buyID: newBuy.id,
       gameID: item.gameID,
@@ -106,7 +137,7 @@ export const createBuy = async (req, res) => {
 
     await transaction.commit();
 
-    // Busca a compra completa para retornar
+    // Buscar a compra completa para retornar
     const completeBuy = await db.Buy.findByPk(newBuy.id, {
       include: [
         { 
@@ -127,6 +158,7 @@ export const createBuy = async (req, res) => {
     res.status(500).json({ message: 'Erro ao criar compra' });
   }
 };
+
 
 // Atualiza uma compra existente
 export const updateBuy = async (req, res) => {

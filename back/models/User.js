@@ -57,15 +57,10 @@ export default (sequelize) => {
 
     // Hook para criptografar a senha antes de criar ou atualizar o usuário
     User.beforeCreate(async (user, options) => {
-        if (user.password) {
-            user.password = await bcrypt.hash(user.password, 10);
-        }
-    });
-
-    User.beforeUpdate(async (user, options) => {
-        if (user.password) {
-            user.password = await bcrypt.hash(user.password, 10);
-        }
+        if(user.password){
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(user.password, salt);
+          }   
     });
 
     User.associate = (models) => {

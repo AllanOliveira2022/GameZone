@@ -24,20 +24,12 @@ export const authenticateToken = (req, res, next) => {
   });
 };
 
-// Middleware para verificar se o usuário está tentando acessar seus próprios dados
-export const authorizeUser = (req, res, next) => {
-  // Verifica se o usuário autenticado está tentando acessar seu próprio recurso
-  if (req.user.id !== parseInt(req.params.id)) {
-    return res.status(403).json({ message: 'Você não tem permissão para acessar esse recurso' });
-  }
-  next();
-};
 
 // Middleware para autorizar um papel específico, como administrador
 export const authorizeRole = (role) => {
   return (req, res, next) => {
     if (req.user.role !== role) {
-      return res.status(403).json({ message: 'Acesso negado' });
+      return res.status(403).json({ message: 'Acesso não permitido!' });
     }
     next();
   };

@@ -14,7 +14,6 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -47,16 +46,13 @@ export const signUp = async (req, res) => {
       return res.status(400).json({ message: 'Já existe um usuário com esse Telefone!' });
     }
 
-    // Criptografando a senha antes de salvar no banco
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await db.User.create({ 
       name, 
       email, 
       dateBirth, 
       phone, 
       address, 
-      password: hashedPassword, 
+      password, 
       role 
     });
 
