@@ -1,5 +1,6 @@
 import db from '../models/index.js';
 
+
 // Busca um jogo pelo ID com relacionamentos
 export const getGameById = async (req, res) => {
   const { id } = req.params;
@@ -37,9 +38,9 @@ export const getGameById = async (req, res) => {
 };
 
 // Lista todos os jogos com paginação e filtros
-const db = require('../models');
 
-exports.listGames = async (req, res) => {
+
+export const listGames = async (req, res) => {
   const { 
     genreId, 
     platformId, 
