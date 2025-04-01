@@ -55,14 +55,30 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0
+  });
 
   // Função para carregar jogos da API
-  const loadGames = async (filters = {}) => {
+  const loadGames = async (filters = {}, page = 1) => {
     setLoading(true);
     setError(null);
     try {
-      const gamesData = await GameService.getGames(filters);
-      setGames(gamesData);
+      const params = {
+        ...filters,
+        page,
+        limit: pagination.limit
+      };
+      
+      const response = await GameService.getGames(params);
+      setGames(response.data);
+      setPagination({
+        ...pagination,
+        total: response.total,
+        page: parseInt(response.page)
+      });
     } catch (err) {
       console.error("Failed to fetch games:", err);
       setError("Erro ao carregar jogos. Tente novamente mais tarde.");
@@ -72,20 +88,27 @@ function Home() {
   };
 
   // Função para lidar com filtros do Menu
-  const handleFilter = (searchTerm, platform, genre) => {
+  const handleFilter = (searchTerm, platform, genre, minPrice, maxPrice) => {
     const newFilters = {};
     if (searchTerm) newFilters.search = searchTerm;
-    if (platform) newFilters.platform = platform;
-    if (genre) newFilters.genre = genre;
+    if (platform) newFilters.platformID = platform;
+    if (genre) newFilters.genreID = genre;
+    if (minPrice) newFilters.minPrice = minPrice;
+    if (maxPrice) newFilters.maxPrice = maxPrice;
     
     setFilters(newFilters);
-    loadGames(newFilters);
+    loadGames(newFilters, 1); // Reset to page 1 when filters change
   };
 
   // Carrega os jogos inicialmente
   useEffect(() => {
     loadGames();
   }, []);
+
+  // Função para mudar de página
+  const handlePageChange = (newPage) => {
+    loadGames(filters, newPage);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -191,6 +214,55 @@ function Home() {
               </Fade>
             ))}
           </Grid>
+
+          {/* Paginação */}
+          {!loading && games.length > 0 && (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              mt: 4,
+              gap: 2
+            }}>
+              <button 
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: pagination.page === 1 ? '#333' : '#26ff00',
+                  color: pagination.page === 1 ? '#666' : '#000',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Anterior
+              </button>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  color: 'primary.main'
+                }}
+              >
+                Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
+              </Typography>
+              <button 
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page * pagination.limit >= pagination.total}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: pagination.page * pagination.limit >= pagination.total ? '#333' : '#26ff00',
+                  color: pagination.page * pagination.limit >= pagination.total ? '#666' : '#000',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: pagination.page * pagination.limit >= pagination.total ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Próxima
+              </button>
+            </Box>
+          )}
         </Box>
       </Box>
     </ThemeProvider>
