@@ -54,7 +54,7 @@ export const GameService = {
       throw error;
     }
   },
-
+  
   // Atualizar um jogo
   async updateGame(id, gameData) {
     try {
