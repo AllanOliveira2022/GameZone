@@ -37,13 +37,16 @@ export const getGameById = async (req, res) => {
 };
 
 // Lista todos os jogos com paginação e filtros
-export const listGames = async (req, res) => {
+const db = require('../models');
+
+exports.listGames = async (req, res) => {
   const { 
-    genreID, 
-    platformID, 
-    developerID, 
+    genreId, 
+    platformId, 
+    developerId, 
     minPrice, 
-    maxPrice, 
+    maxPrice,
+    search,
     page = 1, 
     limit = 10 
   } = req.query;
@@ -51,16 +54,24 @@ export const listGames = async (req, res) => {
   try {
     const whereClause = {};
     
-    // Filtros
-    if (genreID) whereClause.genreID = genreID;
-    if (platformID) whereClause.platformID = platformID;
-    if (developerID) whereClause.developerID = developerID;
+    // Filtros (ajustado para camelCase)
+    if (genreId) whereClause.genreId = genreId;
+    if (platformId) whereClause.platformId = platformId;
+    if (developerId) whereClause.developerId = developerId;
     
     // Filtro de preço
     if (minPrice || maxPrice) {
       whereClause.price = {};
-      if (minPrice) whereClause.price[db.Sequelize.Op.gte] = minPrice;
-      if (maxPrice) whereClause.price[db.Sequelize.Op.lte] = maxPrice;
+      if (minPrice) whereClause.price[db.Sequelize.Op.gte] = parseFloat(minPrice);
+      if (maxPrice) whereClause.price[db.Sequelize.Op.lte] = parseFloat(maxPrice);
+    }
+
+    // Filtro de busca (search)
+    if (search) {
+      whereClause[db.Sequelize.Op.or] = [
+        { title: { [db.Sequelize.Op.iLike]: `%${search}%` } },
+        { description: { [db.Sequelize.Op.iLike]: `%${search}%` } }
+      ];
     }
 
     const games = await db.Game.findAndCountAll({
@@ -84,7 +95,7 @@ export const listGames = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao listar jogos:', error);
-    res.status(500).json({ message: 'Erro ao listar jogos' });
+    res.status(500).json({ message: 'Erro ao listar jogos', error: error.message });
   }
 };
 

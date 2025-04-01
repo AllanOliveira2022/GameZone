@@ -2,12 +2,11 @@ import axios from 'axios';
 
 // Configuração base do Axios
 const api = axios.create({
-  baseURL: 'http://localhost:3001', // URL do seu backend
-  timeout: 10000, // timeout de 10 segundos
+  baseURL: 'http://localhost:3001/api', // Adicione '/api' se seu backend usa essa base
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
-    // Adicione outros headers globais se necessário
-  }
+  },
 });
 
 // Interceptores para tratamento global de erros
