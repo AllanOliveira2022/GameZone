@@ -1,5 +1,5 @@
 import express from 'express';
-import { signUp, login, listUsers } from '../controllers/userController.js'; // Importando os controllers
+import { signUp, login, listUsers, getUserGames} from '../controllers/userController.js'; // Importando os controllers
 import { authenticateToken, authorizeRole } from '../middleware/userMiddleware.js'; // Importando os middlewares
 
 const router = express.Router();
@@ -13,5 +13,7 @@ router.post('/login', login);
 
 // Rota protegida para listar todos os usuários (somente admin)
 router.get('/users', authenticateToken, authorizeRole('admin'), listUsers);
+
+router.get('/users/games', authenticateToken, getUserGames);
 
 export default router;

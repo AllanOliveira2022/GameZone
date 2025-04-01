@@ -5,6 +5,42 @@ import dotenv from 'dotenv';
 dotenv.config();
 import db from '../models/index.js';
 
+export const getUserGames = async (req, res) => {
+  const userID = req.user?.id; // Pegando o ID do usuário da rota
+
+  try {
+    const userGames = await db.ItemJogo.findAll({
+      include: [
+        {
+          model: db.Buy,
+          as: 'compra', // Verifique se esse é o alias correto definido no Model
+          where: { userID }, // Filtrando pelo usuário dono da compra
+          attributes: [], // Não precisamos dos dados da compra
+        },
+        {
+          model: db.Game,
+          as: 'jogo', // Verifique o alias definido no Model
+          attributes: ['id', 'name', 'price', 'description'],
+        },
+      ],
+      attributes: [], // Não queremos os dados da tabela intermediária
+    });
+
+    if (!userGames.length) {
+      return res.status(404).json({ message: 'Nenhum jogo encontrado para este usuário' });
+    }
+
+    const games = userGames.map(item => item.jogo);
+
+    res.status(200).json({ message: 'Jogos recuperados com sucesso', games });
+  } catch (error) {
+    console.error('Erro ao buscar jogos do usuário:', error);
+    res.status(500).json({ message: 'Erro ao buscar jogos' });
+  }
+};
+
+
+
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
