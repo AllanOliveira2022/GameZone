@@ -6,44 +6,112 @@ import {
   Alert,
   Typography,
   Grid,
-  Fade
+  Fade,
+  Button
 } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import GameCard from "../../components/gameCard/gameCard";
 import Menu from "../../components/menu/menu";
 import { GameService } from '../../services/gameService';
 
-// Tema personalizado com paleta neon verde
+// Definindo as cores da paleta como constantes
+const colors = {
+  primary500: "#26ff00",
+  primary300: "#8aff63",
+  primary700: "#1caa00",
+  secondary500: "#32e514",
+  background400: "#101010",
+  background300: "#1a1a1a",
+  textPrimary: "#e7ffea",
+  textSecondary: "#c2ffb0",
+  error: "#ff3333",
+  warning: "#ffcc00",
+  success: "#26ff00",
+  neutral600: "#b9b9b9",
+  background200: "#272727"
+};
+
+// Tema personalizado com valores hexadecimais
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#26ff00",
-      light: "#5dff48",
-      dark: "#00cc00"
+      main: colors.primary500,
+      light: colors.primary300,
+      dark: colors.primary700
     },
     secondary: {
-      main: "#32e514",
+      main: colors.secondary500,
     },
     background: {
-      default: "#101010",
-      paper: "#1a1a1a"
+      default: colors.background400,
+      paper: colors.background300
     },
     text: {
-      primary: "#e7ffea",
-      secondary: "#c1ffc8"
+      primary: colors.textPrimary,
+      secondary: colors.textSecondary
+    },
+    error: {
+      main: colors.error
+    },
+    warning: {
+      main: colors.warning
+    },
+    success: {
+      main: colors.success
     }
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundColor: "#1a1a1a",
-          border: "1px solid rgba(38, 255, 0, 0.1)",
+          backgroundColor: colors.background300,
+          border: `1px solid ${colors.primary700}`,
           transition: "all 0.3s ease",
           '&:hover': {
             transform: "translateY(-4px)",
-            boxShadow: "0 4px 20px rgba(38, 255, 0, 0.15)"
+            boxShadow: `0 4px 20px ${colors.primary700}`,
+            borderColor: colors.primary500
           }
+        }
+      }
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontWeight: 'bold',
+          textTransform: 'none',
+          '&.Mui-disabled': {
+            backgroundColor: colors.background200,
+            color: colors.neutral600
+          }
+        },
+        containedPrimary: {
+          backgroundColor: colors.primary500,
+          color: colors.background400,
+          '&:hover': {
+            backgroundColor: colors.primary300,
+            boxShadow: `0 0 15px ${colors.primary500}`
+          }
+        },
+        outlinedPrimary: {
+          borderColor: colors.primary500,
+          color: colors.primary500,
+          '&:hover': {
+            backgroundColor: colors.primary700,
+            borderColor: colors.primary300
+          }
+        }
+      }
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          backgroundColor: colors.background300,
+          color: colors.textPrimary
+        },
+        standardError: {
+          border: `1px solid ${colors.error}`,
+          backgroundColor: colors.background300
         }
       }
     }
@@ -61,7 +129,6 @@ function Home() {
     total: 0
   });
 
-  // Função para carregar jogos da API
   const loadGames = async (filters = {}, page = 1) => {
     setLoading(true);
     setError(null);
@@ -87,7 +154,6 @@ function Home() {
     }
   };
 
-  // Função para lidar com filtros do Menu
   const handleFilter = (searchTerm, platform, genre, minPrice, maxPrice) => {
     const newFilters = {};
     if (searchTerm) newFilters.search = searchTerm;
@@ -97,37 +163,32 @@ function Home() {
     if (maxPrice) newFilters.maxPrice = maxPrice;
     
     setFilters(newFilters);
-    loadGames(newFilters, 1); // Reset to page 1 when filters change
+    loadGames(newFilters, 1);
   };
 
-  // Carrega os jogos inicialmente
   useEffect(() => {
     loadGames();
   }, []);
 
-  // Função para mudar de página
   const handlePageChange = (newPage) => {
     loadGames(filters, newPage);
   };
 
   return (
     <ThemeProvider theme={theme}>
-      {/* Menu fixo no topo - agora com handler de filtro */}
       <Menu onFilter={handleFilter} />
       
-      {/* Conteúdo principal com padding ajustado */}
       <Box 
         component="main"
         sx={{
           pt: { xs: 20, sm: 25, md: 27 },
           pb: 4,
           minHeight: "100vh",
-          backgroundColor: "background.default",
+          backgroundColor: colors.background400,
           width: '100%',
           overflow: 'hidden'
         }}
       >
-        {/* Box principal com largura controlada */}
         <Box
           sx={{
             maxWidth: 1600,
@@ -147,6 +208,7 @@ function Home() {
                 color="primary" 
                 size={60} 
                 thickness={4} 
+                sx={{ color: colors.primary500 }}
               />
             </Box>
           )}
@@ -154,13 +216,16 @@ function Home() {
           {/* Mensagem de erro */}
           {error && (
             <Alert 
-              severity="error" 
+              severity="error"
               sx={{ 
-                mb: 2, 
+                mb: 4,
+                backgroundColor: colors.background300,
+                border: `1px solid ${colors.error}`,
+                color: colors.textPrimary,
                 '& .MuiAlert-message': { 
                   width: '100%', 
                   textAlign: 'center' 
-                } 
+                }
               }}
             >
               {error}
@@ -179,17 +244,17 @@ function Home() {
               height: 'calc(100vh - 250px)'
             }}>
               <Typography 
-                variant="h5" 
-                color="textSecondary"
+                variant="h4" 
                 sx={{ 
                   mb: 2,
-                  color: 'primary.main',
-                  textShadow: '0 0 10px rgba(38, 255, 0, 0.3)'
+                  color: colors.primary500,
+                  textShadow: `0 0 10px ${colors.primary700}`,
+                  fontWeight: 'bold'
                 }}
               >
                 Nenhum jogo encontrado
               </Typography>
-              <Typography variant="body1" color="textSecondary">
+              <Typography variant="body1" sx={{ color: colors.neutral600 }}>
                 Tente ajustar os filtros ou pesquisa
               </Typography>
             </Box>
@@ -220,47 +285,41 @@ function Home() {
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'center', 
+              alignItems: 'center',
               mt: 4,
-              gap: 2
+              gap: 3
             }}>
-              <button 
+              <Button
+                variant="contained"
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: pagination.page === 1 ? '#333' : '#26ff00',
-                  color: pagination.page === 1 ? '#666' : '#000',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: pagination.page === 1 ? 'not-allowed' : 'pointer'
+                sx={{
+                  minWidth: 100
                 }}
               >
                 Anterior
-              </button>
+              </Button>
+              
               <Typography 
                 variant="body1" 
                 sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center',
-                  color: 'primary.main'
+                  color: colors.textSecondary,
+                  fontWeight: 'medium'
                 }}
               >
                 Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
               </Typography>
-              <button 
+              
+              <Button
+                variant="contained"
                 onClick={() => handlePageChange(pagination.page + 1)}
                 disabled={pagination.page * pagination.limit >= pagination.total}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: pagination.page * pagination.limit >= pagination.total ? '#333' : '#26ff00',
-                  color: pagination.page * pagination.limit >= pagination.total ? '#666' : '#000',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: pagination.page * pagination.limit >= pagination.total ? 'not-allowed' : 'pointer'
+                sx={{
+                  minWidth: 100
                 }}
               >
                 Próxima
-              </button>
+              </Button>
             </Box>
           )}
         </Box>

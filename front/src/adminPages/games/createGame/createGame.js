@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { GameService } from '../../../services/gameService';
+import { GenreService } from '../../../services/genreService';
+import { PlatformService } from '../../../services/platformService';
+import { DeveloperService } from '../../../services/developerService';
 
 function CreateGame() {
   const [formData, setFormData] = useState({
@@ -17,25 +20,30 @@ function CreateGame() {
   const [platforms, setPlatforms] = useState([]);
   const [developers, setDevelopers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [optionsLoading, setOptionsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   const loadOptions = async () => {
+    setOptionsLoading(true);
     try {
-      const genreResponse = await fetch('/api/genres');
-      const platformResponse = await fetch('/api/platforms');
-      const developerResponse = await fetch('/api/developers');
+      // Carrega gêneros usando GenreService
+      const genresResponse = await GenreService.getGenres({ limit: 100 });
+      setGenres(genresResponse.data);
 
-      const genreData = await genreResponse.json();
-      const platformData = await platformResponse.json();
-      const developerData = await developerResponse.json();
+      // Carrega plataformas usando PlatformService
+      const platformsResponse = await PlatformService.getPlatforms({ limit: 100 });
+      setPlatforms(platformsResponse.data);
 
-      setGenres(genreData);
-      setPlatforms(platformData);
-      setDevelopers(developerData);
+      // Carrega desenvolvedores usando DeveloperService
+      const developersResponse = await DeveloperService.getDevelopers({ limit: 100 });
+      setDevelopers(developersResponse.data);
     } catch (error) {
       console.error("Erro ao carregar opções:", error);
+      setError('Erro ao carregar opções. Tente recarregar a página.');
+    } finally {
+      setOptionsLoading(false);
     }
   };
 
@@ -56,13 +64,28 @@ function CreateGame() {
     setLoading(true);
     setError('');
     setSuccessMessage('');
-
+  
     try {
-      const createdGame = await GameService.createGame(formData);
-      setSuccessMessage(createdGame.message);
-      navigate(`/games/${createdGame.game.id}`);
+      const response = await GameService.createGame(formData);
+      
+      if (response.success) {
+        setSuccessMessage(response.message);
+        
+        // Verifica se o game e id existem antes de navegar
+        if (response.game && response.game.id) {
+          setTimeout(() => {
+            navigate(`/games/${response.game.id}`);
+          }, 1500);
+        } else {
+          // Se não tiver id, apenas mostra mensagem de sucesso
+          console.warn('Jogo criado, mas ID não retornado na resposta:', response);
+        }
+      } else {
+        setError(response.message || 'Erro ao criar jogo');
+      }
     } catch (err) {
-      setError('Erro ao criar jogo. Tente novamente mais tarde.');
+      console.error('Erro ao criar jogo:', err);
+      setError(err.response?.data?.message || 'Erro ao criar jogo. Tente novamente mais tarde.');
     } finally {
       setLoading(false);
     }
@@ -227,6 +250,7 @@ function CreateGame() {
             value={formData.genreID}
             onChange={handleChange}
             label="Gênero"
+            disabled={optionsLoading}
           >
             {genres.map((genre) => (
               <MenuItem 
@@ -276,6 +300,7 @@ function CreateGame() {
             value={formData.platformID}
             onChange={handleChange}
             label="Plataforma"
+            disabled={optionsLoading}
           >
             {platforms.map((platform) => (
               <MenuItem 
@@ -325,6 +350,7 @@ function CreateGame() {
             value={formData.developerID}
             onChange={handleChange}
             label="Desenvolvedor"
+            disabled={optionsLoading}
           >
             {developers.map((developer) => (
               <MenuItem 
@@ -399,7 +425,7 @@ function CreateGame() {
             padding: '12px 0',
             fontSize: '1rem'
           }} 
-          disabled={loading}
+          disabled={loading || optionsLoading}
         >
           {loading ? <CircularProgress size={24} sx={{ color: '#101010' }} /> : 'Criar Jogo'}
         </Button>

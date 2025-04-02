@@ -48,7 +48,11 @@ export const GameService = {
   async createGame(gameData) {
     try {
       const response = await api.post('/games', gameData);
-      return response.data;
+      return {
+        success: true,
+        message: 'Jogo criado com sucesso!',
+        game: response.data  // Garante que retorna o objeto game com id
+      };
     } catch (error) {
       console.error('Error creating game:', error);
       throw error;

@@ -15,11 +15,66 @@ code {
 }
 
 :root {
-  --primary-color: #26ff00; /* Verde neon principal */
-  --secondary-color: #32e514; /* Tom ligeiramente mais escuro */
-  --accent-color: #1fcc00; /* Cor de destaque */
-  --background-color: #101010; /* Fundo muito escuro */
-  --background-color2: #1a1a1a; /* Fundo médio escuro */
-  --background-color3: #272727; /* Fundo pouco escuro */
-  --text-color: #e7ffea; /* Texto em verde claro para contraste */
+  /* Cores Primárias - Verde */
+  --primary-100: #e2ffda; /* Verde muito claro */
+  --primary-200: #c2ffb0; /* Verde claro */
+  --primary-300: #8aff63; /* Verde médio claro */
+  --primary-400: #59ff24; /* Verde brilhante */
+  --primary-500: #26ff00; /* Verde neon principal */
+  --primary-600: #21d900; /* Verde ligeiramente escuro */
+  --primary-700: #1caa00; /* Verde escuro */
+  --primary-800: #157900; /* Verde muito escuro */
+  
+  /* Cores Secundárias - Variações de Verde */
+  --secondary-100: #e7ffea; /* Verde pálido */
+  --secondary-200: #cbf5ce; /* Verde menta claro */
+  --secondary-300: #a3e7a7; /* Verde menta médio */
+  --secondary-400: #6dd072; /* Verde esmeralda */
+  --secondary-500: #32e514; /* Tom ligeiramente mais escuro que o principal */
+  --secondary-600: #28b510; /* Verde esmeralda escuro */
+  --secondary-700: #1f8c0c; /* Verde floresta claro */
+  --secondary-800: #166309; /* Verde floresta */
+  
+  /* Cores de Destaque - Variações do Verde Accent */
+  --accent-100: #e8fae0; /* Verde acinzentado muito claro */
+  --accent-200: #bef0ad; /* Verde acinzentado claro */
+  --accent-300: #8ade70; /* Verde acinzentado médio */
+  --accent-400: #56cc33; /* Verde vibrante médio */
+  --accent-500: #1fcc00; /* Cor de destaque original */
+  --accent-600: #1aa400; /* Verde acinzentado escuro */
+  --accent-700: #147d00; /* Verde acinzentado muito escuro */
+  --accent-800: #0f5900; /* Verde acinzentado profundo */
+  
+  /* Tons de Fundo - Escala de Pretos/Cinzas */
+  --background-100: #333333; /* Cinza escuro claro */
+  --background-200: #272727; /* Fundo pouco escuro (antigo background-color3) */
+  --background-300: #1a1a1a; /* Fundo médio escuro (antigo background-color2) */
+  --background-400: #101010; /* Fundo muito escuro (antigo background-color) */
+  --background-500: #0a0a0a; /* Quase preto */
+  --background-600: #050505; /* Praticamente preto */
+  --background-700: #020202; /* Preto intenso */
+  --background-800: #000000; /* Preto absoluto */
+  
+  /* Tons de Branco/Cinza Claro */
+  --neutral-100: #ffffff; /* Branco puro */
+  --neutral-200: #f8f8f8; /* Branco off-white */
+  --neutral-300: #f0f0f0; /* Cinza muito claro */
+  --neutral-400: #e7e7e7; /* Cinza claro */
+  --neutral-500: #d1d1d1; /* Cinza médio claro */
+  --neutral-600: #b9b9b9; /* Cinza médio */
+  --neutral-700: #a3a3a3; /* Cinza médio escuro */
+  --neutral-800: #878787; /* Cinza escuro */
+  
+  /* Cores de Texto */
+  --text-primary: #e7ffea; /* Texto em verde claro para contraste (em fundos escuros) */
+  --text-secondary: #c2ffb0; /* Texto em verde mais claro para títulos */
+  --text-dark: #105200; /* Texto em verde escuro (para fundos claros) */
+  --text-neutral: #ffffff; /* Texto branco para máximo contraste */
+  --text-muted: #a3a3a3; /* Texto em cinza para conteúdo secundário */
+  
+  /* Status e Feedback */
+  --success: #26ff00; /* Sucesso - Verde principal */
+  --warning: #ffcc00; /* Aviso - Amarelo */
+  --error: #ff3333; /* Erro - Vermelho */
+  --info: #33ccff; /* Informação - Azul */
 }
