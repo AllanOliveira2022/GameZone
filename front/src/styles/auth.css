@@ -1,0 +1,52 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #ff0000;
+  }
+  
+  .auth-paper {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 8px;
+  }
+  
+  .auth-title {
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .auth-form {
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .auth-button {
+    background-color: #1976d2;
+    color: white;
+    margin-top: 15px;
+  }
+  
+  .auth-button:hover {
+    background-color: #1565c0;
+  }
+
+  .MuiTextField-root {
+    margin-bottom: 15px;
+  }
+  
+  .MuiOutlinedInput-root {
+    border-radius: 8px;
+  }
+
+  @media (max-width: 600px) {
+    .auth-paper {
+      width: 90%;
+      padding: 20px;
+    }
+  }
+  
+  
