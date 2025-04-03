@@ -6,6 +6,7 @@ import Login from "../userPages/login/login";
 import Register from "../userPages/register/register";
 import Game from "../userPages/game/game";
 import CreateGame from "../adminPages/games/createGame/createGame";
+import Library from "../userPages/library/library";
 
 const AppRoutes = () => {
   return (
@@ -16,6 +17,7 @@ const AppRoutes = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/game/:id" element={<Game />} />
         <Route path="/createGame" element={<CreateGame />} />
+        <Route path="/library" element={<Library />} />
       </Routes>
     </BrowserRouter>
   );

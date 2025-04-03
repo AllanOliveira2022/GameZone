@@ -178,11 +178,11 @@ function Home() {
     <ThemeProvider theme={theme}>
       <Menu onFilter={handleFilter} />
       
-      <Box 
+      <Box  id="main-content"
         component="main"
         sx={{
-          pt: { xs: 20, sm: 25, md: 27 },
-          pb: 4,
+          py: { xs: 5, sm: 5, md: 5 },
+          pl: { xs: 3, sm: 3, md: 3 },
           minHeight: "100vh",
           backgroundColor: colors.background400,
           width: '100%',
