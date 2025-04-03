@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import UserService from '../../services/userService';
 import { 
   Container,
   Paper,
@@ -43,23 +44,31 @@ const validationSchema = yup.object({
     .required('Confirmação de senha é obrigatória')
 });
 
+
 function Register() {
   const [showPassword, setShowPassword] = React.useState(false);
+  
 
   const formik = useFormik({
     initialValues: {
-      nome: '',
-      email: '',
-      dataNascimento: '',
-      telefone: '',
-      endereco: '',
-      senha: '',
-      confirmarSenha: ''
+      name: "",
+      email: "",
+      address: "",
+      dateBirth: "",
+      phone: "",
+      password: ""
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      console.log('Dados do cadastro:', values);
-      // Aqui você faria a chamada à API de cadastro
+    onSubmit: async (values, { setSubmitting, setErrors }) => {
+      try {
+        await UserService.signup(values.name, values.email, values.address, values.dateBirth, values.phone, values.password);
+        alert('Cadastro realizado com sucesso! Você será redirecionado para o login.');
+        window.location.href = '/'; // Redireciona para a página de login
+      } catch (error) {
+        setErrors({ email: error.message || 'Erro ao cadastrar usuário' });
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
@@ -142,14 +151,14 @@ function Register() {
                 fullWidth
                 size="small"
                 type="date"
-                id="dataNascimento"
+                id="dateBirth"
                 name="dataNascimento"
                 label="Data de Nascimento"
                 InputLabelProps={{ shrink: true }}
-                value={formik.values.dataNascimento}
+                value={formik.values.dateBirth}
                 onChange={formik.handleChange}
-                error={formik.touched.dataNascimento && Boolean(formik.errors.dataNascimento)}
-                helperText={formik.touched.dataNascimento && formik.errors.dataNascimento}
+                error={formik.touched.dateBirth && Boolean(formik.errors.dateBirth)}
+                helperText={formik.touched.dateBirth && formik.errors.dateBirth}
                 sx={{ mb: 0.5 }}
               />
             </Grid>
@@ -159,16 +168,16 @@ function Register() {
               <TextField
                 fullWidth
                 size="small"
-                id="telefone"
+                id="phone"
                 name="telefone"
                 label="Telefone"
-                value={formik.values.telefone}
+                value={formik.values.phone}
                 onChange={(e) => {
                   const formatted = formatPhone(e.target.value);
-                  formik.setFieldValue('telefone', formatted);
+                  formik.setFieldValue('phone', formatted);
                 }}
-                error={formik.touched.telefone && Boolean(formik.errors.telefone)}
-                helperText={formik.touched.telefone && formik.errors.telefone}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -185,13 +194,13 @@ function Register() {
               <TextField
                 fullWidth
                 size="small"
-                id="endereco"
+                id="address"
                 name="endereco"
                 label="Endereço Completo"
-                value={formik.values.endereco}
+                value={formik.values.address}
                 onChange={formik.handleChange}
-                error={formik.touched.endereco && Boolean(formik.errors.endereco)}
-                helperText={formik.touched.endereco && formik.errors.endereco}
+                error={formik.touched.address && Boolean(formik.errors.address)}
+                helperText={formik.touched.address && formik.errors.address}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -208,12 +217,12 @@ function Register() {
               <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 0.5 }}>
                 <InputLabel htmlFor="senha">Senha</InputLabel>
                 <OutlinedInput
-                  id="senha"
+                  id="password"
                   name="senha"
                   type={showPassword ? 'text' : 'password'}
-                  value={formik.values.senha}
+                  value={formik.values.password}
                   onChange={formik.handleChange}
-                  error={formik.touched.senha && Boolean(formik.errors.senha)}
+                  error={formik.touched.password && Boolean(formik.errors.password)}
                   endAdornment={
                     <InputAdornment position="end">
                       <IconButton
