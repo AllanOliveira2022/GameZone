@@ -1,0 +1,66 @@
+:root {
+  --primary-color: #26ff00;
+  --secondary-color: #32e514;
+  --accent-color: #1fcc00;
+  --text-color: #e7ffea;
+  /* REMOVIDO background-color daqui */
+}
+
+/* Estilo SÓ para a área de login */
+.auth-container {
+  background-color: #101010; /* usado apenas aqui */
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-paper {
+  background-color: #1a1a1a !important;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: 0 0 10px var(--primary-color);
+}
+
+.auth-title {
+  color: var(--primary-color) !important;
+  font-weight: bold;
+}
+
+.auth-form {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.auth-button {
+  background-color: var(--primary-color) !important;
+  color: #101010 !important;
+  font-weight: bold;
+}
+
+.auth-button:hover {
+  background-color: var(--accent-color) !important;
+}
+
+.MuiInputBase-input {
+  color: var(--text-color) !important;
+}
+
+#nome {
+  color: var(--primary-color) !important;
+}
+
+.MuiOutlinedInput-root {
+  border-color: var(--primary-color) !important;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--secondary-color) !important;
+}
+
+.MuiInputLabel-root {
+  color: var(--text-color) !important;
+}

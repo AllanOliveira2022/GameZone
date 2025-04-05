@@ -1,0 +1,89 @@
+/*Game CSS*/ 
+
+:root {
+    --primary-color: #26ff00;
+    --secondary-color: #32e514;
+    --accent-color: #1fcc00;
+    --background-color: #101010;
+    --background-color2: #1a1a1a;
+    --background-color3: #272727;
+    --text-color: #e7ffea;
+  }
+  
+  body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .MuiCard-root {
+    background-color: var(--background-color2) !important;
+    color: var(--text-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--accent-color);
+  }
+  
+  .MuiCard-root:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 255, 0, 0.3);
+  }
+  
+  .MuiButton-containedPrimary {
+    background-color: var(--primary-color) !important;
+    color: var(--background-color) !important;
+  }
+  
+  .MuiButton-containedPrimary:hover {
+    background-color: var(--accent-color) !important;
+    box-shadow: 0 0 12px var(--primary-color);
+  }
+  
+  .MuiButton-containedPrimary:disabled {
+    background-color: var(--background-color3) !important;
+    color: #26ff00 !important;
+  }
+  
+  .MuiChip-root {
+    background-color: var(--secondary-color) !important;
+    color: var(--background-color3) !important;
+    font-weight: bold;
+  }
+  
+  .MuiAlert-root {
+    background-color: var(--background-color3) !important;
+    border-left: 5px solid var(--accent-color);
+    color: var(--text-color);
+    font-weight: 500;
+  }
+  
+  .MuiRating-iconFilled {
+    color: var(--primary-color) !important;
+  }
+  
+  .MuiRating-iconEmpty {
+    color: var(--background-color3) !important;
+  }
+  
+  .MuiDivider-root {
+    border-color: var(--accent-color);
+  }
+  
+  .MuiTypography-h5, .MuiTypography-h6 {
+    color: var(--secondary-color) !important;
+  }
+  
+  a {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+  
+  a:hover {
+    color: var(--accent-color);
+    text-shadow: 0 0 5px var(--primary-color);
+  }
+  
+  * {
+    color: var(--text-color) !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  }
+  

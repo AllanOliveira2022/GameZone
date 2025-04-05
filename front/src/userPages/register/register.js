@@ -19,7 +19,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import '../../styles/auth.css';
+import '../../styles/auth/auth.css';
 
 // Esquema de validação
 const validationSchema = yup.object({
