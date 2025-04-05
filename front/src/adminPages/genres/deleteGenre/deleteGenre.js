@@ -36,7 +36,7 @@ function DeleteGenre() {
       // Usando o GenreService para deletar o gênero
       await GenreService.deleteGenre(id);
       setSuccess('Gênero excluído com sucesso!');
-      setTimeout(() => navigate('/genres'), 1500);
+      setTimeout(() => navigate('/genresAdmin'), 1500);
     } catch (err) {
       // Tratamento aprimorado de erros
       if (err.response) {

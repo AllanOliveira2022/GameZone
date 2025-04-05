@@ -74,7 +74,7 @@ function UpdateGame() {
     try {
       await GameService.updateGame(id, gameData);
       setSuccess('Jogo atualizado com sucesso!');
-      setTimeout(() => navigate('/games'), 2000);
+      setTimeout(() => navigate('/gamesAdmin'), 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Erro ao atualizar o jogo. Tente novamente.');
       console.error(err);

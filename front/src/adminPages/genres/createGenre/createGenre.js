@@ -32,7 +32,7 @@ function CreateGenre() {
       setGenreData({ name: '' }); // Limpa o formulário
       
       // Redireciona após 1.5 segundos
-      setTimeout(() => navigate('/genres'), 1500);
+      setTimeout(() => navigate('/genresAdmin'), 1500);
     } catch (err) {
       // Tratamento específico de erros baseado na resposta da API
       if (err.response) {

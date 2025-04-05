@@ -38,7 +38,7 @@ function CreatePlatform() {
       setPlatformData({ name: '' }); // Reset form
       
       // Redireciona após 1.5 segundos
-      setTimeout(() => navigate('/platforms'), 1500);
+      setTimeout(() => navigate('/platformsAdmin'), 1500);
     } catch (err) {
       // Tratamento aprimorado de erros
       if (err.response) {

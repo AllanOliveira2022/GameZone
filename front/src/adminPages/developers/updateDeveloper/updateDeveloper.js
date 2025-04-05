@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../../api/api'; // ajuste o caminho conforme sua estrutura
+import api from '../../../api/api';
+import DeveloperService from '../../../services/developerService'; // ✅ Importando o service
 
 function UpdateDeveloper() {
   const { id } = useParams();
@@ -10,7 +11,7 @@ function UpdateDeveloper() {
   const [success, setSuccess] = useState('');
   const [developerData, setDeveloperData] = useState({
     name: '',
-    CNPJ: '',
+    cnpj: '',
     email: '',
     phone: ''
   });
@@ -20,10 +21,10 @@ function UpdateDeveloper() {
       try {
         const response = await api.get(`/developers/${id}`);
         setDeveloperData({
-          name: response.data.name,
-          CNPJ: response.data.CNPJ,
-          email: response.data.email,
-          phone: response.data.phone
+          name: response.data.name || '',
+          cnpj: response.data.cnpj || '',
+          email: response.data.email || '',
+          phone: response.data.phone || ''
         });
         setLoading(false);
       } catch (err) {
@@ -55,21 +56,27 @@ function UpdateDeveloper() {
     }
 
     try {
-      await api.updateDeveloper(id, developerData);
+      await DeveloperService.updateDeveloper(id, developerData); // ✅ Usando o service
       setSuccess('Desenvolvedor atualizado com sucesso!');
-      setTimeout(() => navigate('/developers'), 1500);
+      setTimeout(() => navigate('/developersAdmin'), 1500);
     } catch (err) {
-      if (err.response && err.response.status === 404) {
-        setError('Desenvolvedor não encontrado');
+      if (err.response) {
+        if (err.response.status === 404) {
+          setError('Desenvolvedor não encontrado');
+        } else if (err.response.status === 400) {
+          setError('Dados inválidos. Verifique as informações.');
+        } else {
+          setError('Erro ao atualizar o desenvolvedor. Tente novamente.');
+        }
       } else {
-        setError('Erro ao atualizar o desenvolvedor. Tente novamente.');
+        setError('Erro de conexão. Verifique sua internet.');
       }
       console.error(err);
     }
   };
 
   const handleCancel = () => {
-    navigate('/developers');
+    navigate('/developersAdmin');
   };
 
   if (loading) return <div className="text-center py-8">Carregando...</div>;
@@ -91,6 +98,8 @@ function UpdateDeveloper() {
       )}
       
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        {/* Campos do formulário mantidos como antes */}
+        {/* ... */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
             Nome da Empresa *
@@ -109,14 +118,14 @@ function UpdateDeveloper() {
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="CNPJ">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cnpj">
             CNPJ
           </label>
           <input
             type="text"
-            id="CNPJ"
-            name="CNPJ"
-            value={developerData.CNPJ}
+            id="cnpj"
+            name="cnpj"
+            value={developerData.cnpj}
             onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             placeholder="00.000.000/0000-00"

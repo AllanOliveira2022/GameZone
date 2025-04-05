@@ -57,7 +57,7 @@ function UpdatePlatform() {
       // Usando o PlatformService para atualizar a plataforma
       await PlatformService.updatePlatform(id, platformData);
       setSuccess('Plataforma atualizada com sucesso!');
-      setTimeout(() => navigate('/platforms'), 1500);
+      setTimeout(() => navigate('/platformsAdmin'), 1500);
     } catch (err) {
       // Tratamento aprimorado de erros
       if (err.response) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../../api/api'; // ajuste o caminho conforme sua estrutura
+import { DeveloperService } from '../../../services/developerService'; // ajuste o caminho conforme sua estrutura
 
 function DeleteDeveloper() {
   const { id } = useParams();
@@ -14,8 +14,8 @@ function DeleteDeveloper() {
   useEffect(() => {
     const fetchDeveloper = async () => {
       try {
-        const response = await api.get(`/developers/${id}`);
-        setDeveloper(response.data);
+        const developerData = await DeveloperService.getDeveloperById(id);
+        setDeveloper(developerData);
         setLoading(false);
       } catch (err) {
         setError('Erro ao carregar dados do desenvolvedor');
@@ -32,7 +32,7 @@ function DeleteDeveloper() {
     setError('');
     
     try {
-      await api.deleteDeveloper(id);
+      await DeveloperService.deleteDeveloper(id);
       setSuccess('Desenvolvedor excluído com sucesso!');
       setTimeout(() => navigate('/developers'), 1500);
     } catch (err) {
@@ -90,7 +90,7 @@ function DeleteDeveloper() {
           
           <div className="mb-6 p-4 bg-gray-50 rounded">
             <h3 className="text-lg font-medium">{developer.name}</h3>
-            {developer.CNPJ && <p className="text-gray-600 mt-1">CNPJ: {developer.CNPJ}</p>}
+            {developer.cnpj && <p className="text-gray-600 mt-1">CNPJ: {developer.cnpj}</p>}
             {developer.email && <p className="text-gray-600 mt-1">Email: {developer.email}</p>}
             {developer.phone && <p className="text-gray-600 mt-1">Telefone: {developer.phone}</p>}
           </div>

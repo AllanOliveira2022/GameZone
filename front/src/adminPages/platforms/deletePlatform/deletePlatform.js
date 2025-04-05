@@ -36,7 +36,7 @@ function DeletePlatform() {
       // Usando o PlatformService para deletar a plataforma
       await PlatformService.deletePlatform(id);
       setSuccess('Plataforma excluída com sucesso!');
-      setTimeout(() => navigate('/platforms'), 1500);
+      setTimeout(() => navigate('/platformsAdmin'), 1500);
     } catch (err) {
       // Tratamento aprimorado de erros
       if (err.response) {

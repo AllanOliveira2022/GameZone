@@ -74,7 +74,7 @@ function CreateGame() {
         // Verifica se o game e id existem antes de navegar
         if (response.game && response.game.id) {
           setTimeout(() => {
-            navigate(`/games/${response.game.id}`);
+            navigate(`/gamesAdmin/${response.game.id}`);
           }, 1500);
         } else {
           // Se não tiver id, apenas mostra mensagem de sucesso

@@ -73,3 +73,5 @@ export const DeveloperService = {
     }
   }
 };
+
+export default DeveloperService;

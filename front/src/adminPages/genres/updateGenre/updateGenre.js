@@ -57,7 +57,7 @@ function UpdateGenre() {
       // Usando o GenreService para atualizar o gênero
       await GenreService.updateGenre(id, genreData);
       setSuccess('Gênero atualizado com sucesso!');
-      setTimeout(() => navigate('/genres'), 1500);
+      setTimeout(() => navigate('/genresAdmin'), 1500);
     } catch (err) {
       // Tratamento aprimorado de erros
       if (err.response) {

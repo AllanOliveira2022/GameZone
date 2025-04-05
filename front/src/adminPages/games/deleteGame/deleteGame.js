@@ -36,7 +36,7 @@ function DeleteGame() {
       // Usando o GameService para deletar o jogo
       await GameService.deleteGame(id);
       setSuccess('Jogo excluído com sucesso!');
-      setTimeout(() => navigate('/games'), 1500);
+      setTimeout(() => navigate('/gamesAdmin'), 1500);
     } catch (err) {
       if (err.response && err.response.status === 404) {
         setError('Jogo não encontrado');

@@ -34,7 +34,7 @@ function CreateDeveloper() {
       setDeveloperData({ name: '', CNPJ: '', email: '', phone: '' }); // Limpa o formulário
       
       // Opcional: redirecionar após sucesso
-      setTimeout(() => navigate('/developers'), 1500);
+      setTimeout(() => navigate('/developersAdmin'), 1500);
     } catch (err) {
       if (err.response && err.response.data.message) {
         setError(err.response.data.message);
