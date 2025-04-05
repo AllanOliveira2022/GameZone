@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import UserService from '../../services/userService';
-import { 
+import {
   Container,
   Paper,
   Typography,
@@ -16,10 +16,7 @@ import {
   OutlinedInput,
   FormHelperText
 } from '@mui/material';
-import { 
-  Visibility, 
-  VisibilityOff
-} from '@mui/icons-material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import '../../styles/auth.css';
@@ -30,8 +27,8 @@ const validationSchema = yup.object({
   email: yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
   dataNascimento: yup.string().required('Data de nascimento é obrigatória'),
   telefone: yup.string()
-    .matches(/\(\d{2}\) \d{4,5}-\d{4}/, 'Telefone inválido')
-    .required('Telefone é obrigatório'),
+  .matches(/^\d{10,11}$/, 'Telefone inválido')
+  .required('Telefone é obrigatório'),
   endereco: yup.string().required('Endereço é obrigatório'),
   senha: yup.string()
     .min(8, 'A senha deve ter no mínimo 8 caracteres')
@@ -43,20 +40,28 @@ const validationSchema = yup.object({
 
 function Register() {
   const [showPassword, setShowPassword] = React.useState(false);
-  
+
   const formik = useFormik({
     initialValues: {
-      name: "",
-      email: "",
-      address: "",
-      dateBirth: "",
-      phone: "",
-      password: ""
+      nome: '',
+      email: '',
+      dataNascimento: '',
+      telefone: '',
+      endereco: '',
+      senha: '',
+      confirmarSenha: ''
     },
-    validationSchema: validationSchema,
+    validationSchema,
     onSubmit: async (values, { setSubmitting, setErrors }) => {
       try {
-        await UserService.signup(values.name, values.email, values.address, values.dateBirth, values.phone, values.password);
+        await UserService.signup({
+          name: values.nome,
+          email: values.email,
+          address: values.endereco,
+          dateBirth: values.dataNascimento,
+          phone: values.telefone,
+          password: values.senha
+        });
         alert('Cadastro realizado com sucesso! Você será redirecionado para o login.');
         window.location.href = '/';
       } catch (error) {
@@ -67,9 +72,7 @@ function Register() {
     },
   });
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
 
   return (
     <Container component="main" maxWidth="xs" className="auth-container">
@@ -77,7 +80,7 @@ function Register() {
         <Typography component="h1" variant="h5" align="center" className="auth-title">
           Cadastro
         </Typography>
-        
+
         <form onSubmit={formik.handleSubmit} className="auth-form">
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -110,51 +113,52 @@ function Register() {
               <TextField
                 fullWidth
                 type="date"
-                id="dateBirth"
+                id="dataNascimento"
                 name="dataNascimento"
                 label="Data de Nascimento"
                 InputLabelProps={{ shrink: true }}
-                value={formik.values.dateBirth}
+                value={formik.values.dataNascimento}
                 onChange={formik.handleChange}
-                error={formik.touched.dateBirth && Boolean(formik.errors.dateBirth)}
-                helperText={formik.touched.dateBirth && formik.errors.dateBirth}
+                error={formik.touched.dataNascimento && Boolean(formik.errors.dataNascimento)}
+                helperText={formik.touched.dataNascimento && formik.errors.dataNascimento}
               />
+            </Grid>
+
+            <Grid item xs={12}>
+            <TextField
+              fullWidth
+              id="telefone"
+              name="telefone"
+              label="Telefone"
+              value={formik.values.telefone}
+              onChange={formik.handleChange}
+              error={formik.touched.telefone && Boolean(formik.errors.telefone)}
+              helperText={formik.touched.telefone && formik.errors.telefone}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+            />
             </Grid>
 
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                id="phone"
-                name="telefone"
-                label="Telefone"
-                value={formik.values.phone}
-                onChange={formik.handleChange}
-                error={formik.touched.phone && Boolean(formik.errors.phone)}
-                helperText={formik.touched.phone && formik.errors.phone}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                id="address"
+                id="endereco"
                 name="endereco"
                 label="Endereço Completo"
-                value={formik.values.address}
+                value={formik.values.endereco}
                 onChange={formik.handleChange}
-                error={formik.touched.address && Boolean(formik.errors.address)}
-                helperText={formik.touched.address && formik.errors.address}
+                error={formik.touched.endereco && Boolean(formik.errors.endereco)}
+                helperText={formik.touched.endereco && formik.errors.endereco}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <FormControl fullWidth>
+              <FormControl fullWidth error={formik.touched.senha && Boolean(formik.errors.senha)}>
                 <InputLabel htmlFor="senha">Senha</InputLabel>
                 <OutlinedInput
-                  id="password"
+                  id="senha"
                   name="senha"
                   type={showPassword ? 'text' : 'password'}
-                  value={formik.values.password}
+                  value={formik.values.senha}
                   onChange={formik.handleChange}
                   endAdornment={
                     <InputAdornment position="end">
@@ -170,6 +174,28 @@ function Register() {
             </Grid>
 
             <Grid item xs={12}>
+              <FormControl fullWidth error={formik.touched.confirmarSenha && Boolean(formik.errors.confirmarSenha)}>
+                <InputLabel htmlFor="confirmarSenha">Confirmar Senha</InputLabel>
+                <OutlinedInput
+                  id="confirmarSenha"
+                  name="confirmarSenha"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formik.values.confirmarSenha}
+                  onChange={formik.handleChange}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton onClick={handleClickShowPassword} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label="Confirmar Senha"
+                />
+                <FormHelperText>{formik.touched.confirmarSenha && formik.errors.confirmarSenha}</FormHelperText>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
               <Button type="submit" fullWidth variant="contained" className="auth-button">
                 Cadastrar
               </Button>
@@ -177,7 +203,7 @@ function Register() {
 
             <Grid item xs={12}>
               <Typography variant="body2" align="center">
-                Já tem uma conta? {' '}
+                Já tem uma conta?{' '}
                 <MuiLink component={Link} to="/" underline="hover">
                   Faça login
                 </MuiLink>

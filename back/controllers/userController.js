@@ -77,6 +77,9 @@ export const signUp = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: 'Já existe um usuário com esse Email!' });
     }
+    if (!phone) {
+      return res.status(400).json({ message: 'Telefone é obrigatorio' });
+    }
     const existingUserTel = await db.User.findOne({ where: { phone } });
     if (existingUserTel) {
       return res.status(400).json({ message: 'Já existe um usuário com esse Telefone!' });

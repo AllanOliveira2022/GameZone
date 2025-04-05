@@ -7,6 +7,9 @@ import Register from "../userPages/register/register";
 import Game from "../userPages/game/game";
 import CreateGame from "../adminPages/games/createGame/createGame";
 import Library from "../userPages/library/library";
+import HomeAdmin from "../userPages/admin/homeAdmin";
+import ProtectedRouteAdmin from "../components/midgame"; // ajuste o caminho se necessário
+
 
 const AppRoutes = () => {
   return (
@@ -14,9 +17,10 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/homeAdmin" element={<HomeAdmin />} />
         <Route path="/register" element={<Register />} />
         <Route path="/game/:id" element={<Game />} />
-        <Route path="/createGame" element={<CreateGame />} />
+        <Route path="/createGame" element={<ProtectedRouteAdmin><CreateGame/></ProtectedRouteAdmin>}/>
         <Route path="/library" element={<Library />} />
       </Routes>
     </BrowserRouter>

@@ -46,13 +46,23 @@ function Login() {
       try {
         setErrorMessage('');
         const response = await UserService.login(values.email, values.password);
+
         localStorage.setItem('token', response.token);
-        navigate('/home');
+        localStorage.setItem('role', response.role); // Armazenando o papel do usuário
+
+        // Redirecionamento com base no role
+        if (response.role === 'admin') {
+          navigate('/homeAdmin');
+        } else {
+          navigate('/home');
+        }
+
       } catch (error) {
         setErrorMessage(error.message || 'Erro ao fazer login');
       }
     },
   });
+
 
   return (
     <ThemeProvider theme={loginTheme}>
