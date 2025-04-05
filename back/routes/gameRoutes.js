@@ -4,10 +4,10 @@ import { authenticateToken, authorizeRole } from '../middleware/userMiddleware.j
 
 const router = Router();
 
-router.get('/games', listGames);
-router.get('/games/:id', getGameById);
+router.get('/games', authenticateToken, listGames);
+router.get('/games/:id', authenticateToken, getGameById);
 router.post('/games', authenticateToken, authorizeRole('admin'), createGame);
-router.put('/games/:id', updateGame);
-router.delete('/games/:id', deleteGame);
+router.put('/games/:id', authenticateToken, authorizeRole('admin'), updateGame);
+router.delete('/games/:id', authenticateToken, authorizeRole('admin'), deleteGame);
 
 export default router;

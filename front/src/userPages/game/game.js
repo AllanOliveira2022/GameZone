@@ -7,6 +7,8 @@ import {
   Grid, Card, CardMedia, CardContent, Chip, Divider, Rating
 } from '@mui/material';
 import { GameService } from '../../services/gameService';
+import { UserService } from '../../services/userService';
+import { BuyService } from '../../services/buyService';
 
 function Game() {
   const { id } = useParams();

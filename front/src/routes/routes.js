@@ -42,7 +42,7 @@ const AppRoutes = () => {
         <Route path="/library" element={<Library />} />
 
         <Route path="/createGame" element={<ProtectedRouteAdmin><CreateGame/></ProtectedRouteAdmin>}/>
-        <Route path="/homeAdmin" element={<HomeAdmin />} />
+        <Route path="/homeAdmin" element={<ProtectedRouteAdmin><HomeAdmin /></ProtectedRouteAdmin>} />
         <Route path="/updateGame/:id" element={<UpdateGame />} />
         <Route path="/deleteGame/:id" element={<DeleteGame />} />
 

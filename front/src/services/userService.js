@@ -19,6 +19,15 @@ const UserService = {
     }
   },
 
+  getUserById: async (userId) => {
+    try {
+      const response = await api.get(`/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter dados do usuário' };
+    }
+  },
+
   getUsers: async () => {
     try {
       const response = await api.get('/users');
