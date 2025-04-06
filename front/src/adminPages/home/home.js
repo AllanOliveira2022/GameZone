@@ -18,42 +18,40 @@ import {
     DeveloperMode as DeveloperIcon,
     Computer as PlatformIcon,
     ShoppingCart as BuyIcon,
-    Logout as LogoutIcon,
-    Dashboard as DashboardIcon
+    Logout as LogoutIcon
 } from '@mui/icons-material';
 
 function SimpleAdminPanel() {
-    // Tema personalizado com preto e verde limão
     const customTheme = createTheme({
         palette: {
             mode: 'dark',
             primary: {
-                main: '#aeea00', // Verde limão
-                dark: '#99cc00',  // Verde limão mais escuro
+                main: '#aeea00',
+                dark: '#99cc00',
                 contrastText: '#000000',
             },
             secondary: {
-                main: '#64dd17', // Verde claro
+                main: '#64dd17',
                 contrastText: '#000000',
             },
             success: {
-                main: '#00e676', // Verde esmeralda
+                main: '#00e676',
                 contrastText: '#000000',
             },
             warning: {
-                main: '#ffea00', // Amarelo vibrante
+                main: '#ffea00',
                 contrastText: '#000000',
             },
             info: {
-                main: '#00e5ff', // Ciano
+                main: '#00e5ff',
                 contrastText: '#000000',
             },
             error: {
-                main: '#ff1744', // Vermelho brilhante
+                main: '#ff1744',
             },
             background: {
-                default: '#121212', // Quase preto
-                paper: '#1e1e1e',   // Cinza escuro
+                default: '#121212',
+                paper: '#1e1e1e',
             },
             text: {
                 primary: '#ffffff',
@@ -73,29 +71,20 @@ function SimpleAdminPanel() {
 
     const navigate = useNavigate();
     const [userName, setUserName] = useState('');
-    
+
     useEffect(() => {
-        // Recuperar o nome do usuário do localStorage quando o componente monta
         const name = localStorage.getItem('name');
         setUserName(name || 'Administrador');
     }, []);
-    
+
     const handleLogout = () => {
-        // Limpar dados do usuário no localStorage
         localStorage.removeItem('name');
         localStorage.removeItem('token');
         localStorage.removeItem('id');
-        // Redirecionar para a página de login
         navigate('/');
     };
 
     const adminSections = [
-        {
-            title: "Dashboard",
-            icon: <DashboardIcon fontSize="large" />,
-            color: customTheme.palette.primary.main,
-            to: "/dashboard"
-        },
         {
             title: "Jogos",
             icon: <GamesIcon fontSize="large" />,
@@ -130,40 +119,39 @@ function SimpleAdminPanel() {
 
     return (
         <ThemeProvider theme={customTheme}>
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
                 minHeight: '100vh',
                 backgroundColor: customTheme.palette.background.default
             }}>
-                {/* Barra superior com nome do usuário e botão de logout */}
                 <AppBar position="static" sx={{ backgroundColor: '#000000', borderBottom: '1px solid #aeea00' }}>
                     <Toolbar sx={{ justifyContent: 'space-between' }}>
-                        <Typography 
-                            variant="h6" 
-                            component="div" 
-                            sx={{ 
-                                fontWeight: 'bold', 
+                        <Typography
+                            variant="h6"
+                            component="div"
+                            sx={{
+                                fontWeight: 'bold',
                                 color: '#aeea00',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 1
                             }}
                         >
-                            <DashboardIcon /> Sistema de Administração
+                            Sistema de Administração
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Typography variant="body1" sx={{ color: '#ffffff' }}>
                                 Olá, <strong style={{ color: '#aeea00' }}>{userName}</strong>
                             </Typography>
-                            <Button 
-                                variant="contained" 
-                                sx={{ 
-                                    backgroundColor: '#aeea00', 
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    backgroundColor: '#aeea00',
                                     color: '#000000',
                                     '&:hover': {
                                         backgroundColor: '#99cc00',
-                                    } 
+                                    }
                                 }}
                                 startIcon={<LogoutIcon />}
                                 onClick={handleLogout}
@@ -198,11 +186,10 @@ function SimpleAdminPanel() {
                         Painel Administrativo
                     </Typography>
 
-                    {/* Card de Boas-vindas */}
-                    <Paper elevation={4} sx={{ 
-                        p: 4, 
-                        mb: 5, 
-                        width: '100%', 
+                    <Paper elevation={4} sx={{
+                        p: 4,
+                        mb: 5,
+                        width: '100%',
                         maxWidth: '800px',
                         backgroundColor: '#1e1e1e',
                         borderRadius: 2,
@@ -219,7 +206,7 @@ function SimpleAdminPanel() {
 
                     <Grid container spacing={3} sx={{ maxWidth: '900px' }}>
                         {adminSections.map((section, index) => (
-                            <Grid item xs={12} sm={6} md={4} key={index}>
+                            <Grid item xs={12} sm={6} md={index < 2 ? 6 : 4} key={index}>
                                 <Button
                                     component={Link}
                                     to={section.to}
@@ -246,17 +233,17 @@ function SimpleAdminPanel() {
                                         boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
                                     }}
                                 >
-                                    <Box sx={{ 
-                                        p: 1.5, 
+                                    <Box sx={{
+                                        p: 1.5,
                                         borderRadius: '50%',
                                         backgroundColor: 'rgba(0,0,0,0.2)',
                                         mb: 1
                                     }}>
                                         {section.icon}
                                     </Box>
-                                    <Typography 
-                                        variant="h6" 
-                                        component="span" 
+                                    <Typography
+                                        variant="h6"
+                                        component="span"
                                         textAlign="center"
                                         sx={{ fontWeight: 'bold' }}
                                     >
@@ -267,11 +254,11 @@ function SimpleAdminPanel() {
                         ))}
                     </Grid>
                 </Box>
-                
-                <Box 
-                    component="footer" 
-                    sx={{ 
-                        py: 2, 
+
+                <Box
+                    component="footer"
+                    sx={{
+                        py: 2,
                         textAlign: 'center',
                         borderTop: '1px solid #333333',
                         mt: 'auto'

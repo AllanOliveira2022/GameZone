@@ -13,16 +13,13 @@ import {
   TextField,
   Box,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   FormControl,
-  FormHelperText,
   CardMedia,
-  Chip
+  Chip,
+  MenuItem,
+  InputAdornment
 } from '@mui/material';
-import { Add, Search } from '@mui/icons-material';
+import { Add, Search, Clear } from '@mui/icons-material';
 
 function GamesAdmin() {
   const navigate = useNavigate();
@@ -123,6 +120,7 @@ function GamesAdmin() {
       minPrice: '',
       maxPrice: ''
     });
+    setSearchTerm('');
   };
 
   const handlePageChange = (newPage) => {
@@ -149,77 +147,88 @@ function GamesAdmin() {
           variant="outlined"
           placeholder="Pesquisar jogos..."
           fullWidth
-          InputProps={{
-            startAdornment: <Search sx={{ marginRight: '8px' }} />
-          }}
           value={searchTerm}
           onChange={handleSearch}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+            endAdornment: searchTerm && (
+              <InputAdornment position="end">
+                <Clear 
+                  onClick={resetFilters}
+                  style={{ cursor: 'pointer' }}
+                />
+              </InputAdornment>
+            )
+          }}
         />
       </Box>
 
       {/* Filtros */}
-      <Box mb={3} display="flex" gap={2} flexWrap="wrap">
-        <FormControl sx={{ minWidth: 180 }}>
+      <Box mb={3} display="flex" gap={2} flexWrap="wrap" alignItems="center">
+        <FormControl size="small" sx={{ minWidth: 150 }}>
           <TextField
             select
             label="Gênero"
             name="genreID"
             value={filters.genreID}
             onChange={handleFilterChange}
-            SelectProps={{
-              native: true
-            }}
+            size="small"
           >
-            <option value="">Todos</option>
+            <MenuItem value="">Todos</MenuItem>
             {genres.map((genre) => (
-              <option key={genre.id} value={genre.id}>
+              <MenuItem key={genre.id} value={genre.id}>
                 {genre.name}
-              </option>
+              </MenuItem>
             ))}
           </TextField>
         </FormControl>
 
-        <FormControl sx={{ minWidth: 180 }}>
+        <FormControl size="small" sx={{ minWidth: 150 }}>
           <TextField
             select
             label="Plataforma"
             name="platformID"
             value={filters.platformID}
             onChange={handleFilterChange}
-            SelectProps={{
-              native: true
-            }}
+            size="small"
           >
-            <option value="">Todas</option>
+            <MenuItem value="">Todas</MenuItem>
             {platforms.map((platform) => (
-              <option key={platform.id} value={platform.id}>
+              <MenuItem key={platform.id} value={platform.id}>
                 {platform.name}
-              </option>
+              </MenuItem>
             ))}
           </TextField>
         </FormControl>
 
-        <FormControl sx={{ minWidth: 180 }}>
+        <FormControl size="small" sx={{ minWidth: 180 }}>
           <TextField
             select
             label="Desenvolvedor"
             name="developerID"
             value={filters.developerID}
             onChange={handleFilterChange}
-            SelectProps={{
-              native: true
-            }}
+            size="small"
           >
-            <option value="">Todos</option>
+            <MenuItem value="">Todos</MenuItem>
             {developers.map((developer) => (
-              <option key={developer.id} value={developer.id}>
+              <MenuItem key={developer.id} value={developer.id}>
                 {developer.name}
-              </option>
+              </MenuItem>
             ))}
           </TextField>
         </FormControl>
 
-        <Button variant="outlined" onClick={resetFilters}>
+        <Button 
+          variant="outlined" 
+          onClick={resetFilters}
+          startIcon={<Clear />}
+          size="small"
+        >
           Limpar Filtros
         </Button>
       </Box>
@@ -243,51 +252,39 @@ function GamesAdmin() {
         </Box>
       ) : (
         <>
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {games.map((game) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={game.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardMedia
                     component="img"
-                    height="200"
+                    height="140"
                     image={game.imageUrl || '/placeholder-game.jpg'}
                     alt={game.name}
                     sx={{ objectFit: 'cover' }}
                   />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography gutterBottom variant="h6" component="h3">
+                  <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                    <Typography gutterBottom variant="subtitle1" component="h3" noWrap>
                       {game.name}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {game.description?.substring(0, 100)}...
-                    </Typography>
                     
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
                       {game.genre && (
-                        <Chip label={game.genre.name} size="small" />
+                        <Chip label={game.genre.name} size="small" sx={{ mb: 0.5 }} />
                       )}
                       {game.platform && (
-                        <Chip label={game.platform.name} size="small" variant="outlined" />
+                        <Chip label={game.platform.name} size="small" variant="outlined" sx={{ mb: 0.5 }} />
                       )}
                     </Box>
                     
-                    <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
                       R$ {game.price.toFixed(2)}
                     </Typography>
                   </CardContent>
-                  <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
+                  <Box sx={{ p: 1, display: 'flex', gap: 1 }}>
                     <Button
                       fullWidth
                       variant="contained"
-                      color="primary"
-                      size="small"
-                      onClick={() => navigate(`/games/${game.id}`)}
-                    >
-                      Detalhes
-                    </Button>
-                    <Button
-                      fullWidth
-                      variant="outlined"
                       color="secondary"
                       size="small"
                       onClick={() => navigate(`/updateGame/${game.id}`)}
@@ -309,19 +306,21 @@ function GamesAdmin() {
             ))}
           </Grid>
 
-          <Box mt={3} display="flex" justifyContent="center">
+          <Box mt={3} display="flex" justifyContent="center" alignItems="center">
             <Button
               disabled={pagination.page === 1}
               onClick={() => handlePageChange(pagination.page - 1)}
+              size="small"
             >
               Anterior
             </Button>
-            <Typography sx={{ margin: '0 16px', alignSelf: 'center' }}>
+            <Typography variant="body2" sx={{ mx: 2 }}>
               Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
             </Typography>
             <Button
               disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
               onClick={() => handlePageChange(pagination.page + 1)}
+              size="small"
             >
               Próxima
             </Button>
