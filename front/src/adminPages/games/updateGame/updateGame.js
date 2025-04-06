@@ -1,9 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GameService } from '../../../services/gameService'; // Ajuste o caminho conforme sua estrutura
+import { GameService } from '../../../services/gameService';
 import { GenreService } from '../../../services/genreService';
 import { PlatformService } from '../../../services/platformService';
 import { DeveloperService } from '../../../services/developerService';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+  MenuItem,
+  Alert,
+  ThemeProvider,
+  createTheme
+} from '@mui/material';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#AEEA00',
+      contrastText: '#000000',
+    },
+    secondary: {
+      main: '#7CB342',
+      contrastText: '#000000',
+    },
+    error: {
+      main: '#FF5252',
+    },
+    background: {
+      default: '#121212',
+      paper: '#1E1E1E',
+    },
+    text: {
+      primary: '#FFFFFF',
+      secondary: '#B0B0B0',
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#1A1A1A',
+          borderRadius: 12,
+        },
+      },
+    },
+  },
+});
 
 function UpdateGame() {
   const { id } = useParams();
@@ -26,8 +79,7 @@ function UpdateGame() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Carrega os dados em paralelo
-        const [gameResponse, genresRes, platformsRes, developersRes] = await Promise.all([
+        const [gameRes, genresRes, platformsRes, devsRes] = await Promise.all([
           GameService.getGameById(id),
           GenreService.getGenres(),
           PlatformService.getPlatforms(),
@@ -35,18 +87,17 @@ function UpdateGame() {
         ]);
 
         setGameData({
-          name: gameResponse.name,
-          description: gameResponse.description,
-          price: gameResponse.price,
-          genreID: gameResponse.genreID,
-          platformID: gameResponse.platformID,
-          developerID: gameResponse.developerID
+          name: gameRes.name,
+          description: gameRes.description,
+          price: gameRes.price,
+          genreID: gameRes.genreID,
+          platformID: gameRes.platformID,
+          developerID: gameRes.developerID
         });
 
         setGenres(genresRes.data);
         setPlatforms(platformsRes.data);
-        setDevelopers(developersRes.data);
-        
+        setDevelopers(devsRes.data);
         setLoading(false);
       } catch (err) {
         setError('Erro ao carregar dados do jogo');
@@ -60,7 +111,7 @@ function UpdateGame() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setGameData(prev => ({
+    setGameData((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -81,146 +132,127 @@ function UpdateGame() {
     }
   };
 
-  if (loading) return <div className="text-center py-8">Carregando...</div>;
-
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Atualizar Jogo</h1>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-            Nome do Jogo *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={gameData.name}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-            autoFocus
-          />
-        </div>
+    <ThemeProvider theme={darkTheme}>
+      <Box sx={{ padding: '24px', minHeight: '100vh', backgroundColor: darkTheme.palette.background.default }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 3 }}>
+          Atualizar Jogo
+        </Typography>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-            Descrição *
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={gameData.description}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"
-            required
-          />
-        </div>
+        {loading ? (
+          <Box display="flex" justifyContent="center" mt={4}>
+            <CircularProgress color="primary" />
+          </Box>
+        ) : (
+          <>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {success}
+              </Alert>
+            )}
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">
-            Preço *
-          </label>
-          <input
-            type="number"
-            id="price"
-            name="price"
-            value={gameData.price}
-            onChange={handleChange}
-            step="0.01"
-            min="0"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          />
-        </div>
+            <Box component="form" onSubmit={handleSubmit} sx={{ backgroundColor: darkTheme.palette.background.paper, p: 3, borderRadius: 2 }}>
+              <TextField
+                fullWidth
+                label="Nome do Jogo"
+                name="name"
+                value={gameData.name}
+                onChange={handleChange}
+                required
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Descrição"
+                name="description"
+                value={gameData.description}
+                onChange={handleChange}
+                required
+                multiline
+                rows={4}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                label="Preço"
+                name="price"
+                type="number"
+                inputProps={{ step: '0.01', min: 0 }}
+                value={gameData.price}
+                onChange={handleChange}
+                required
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                fullWidth
+                select
+                label="Gênero"
+                name="genreID"
+                value={gameData.genreID}
+                onChange={handleChange}
+                required
+                sx={{ mb: 2 }}
+              >
+                <MenuItem value="">Selecione um gênero</MenuItem>
+                {genres.map((genre) => (
+                  <MenuItem key={genre.id} value={genre.id}>
+                    {genre.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                fullWidth
+                select
+                label="Plataforma"
+                name="platformID"
+                value={gameData.platformID}
+                onChange={handleChange}
+                required
+                sx={{ mb: 2 }}
+              >
+                <MenuItem value="">Selecione uma plataforma</MenuItem>
+                {platforms.map((platform) => (
+                  <MenuItem key={platform.id} value={platform.id}>
+                    {platform.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                fullWidth
+                select
+                label="Desenvolvedor"
+                name="developerID"
+                value={gameData.developerID}
+                onChange={handleChange}
+                required
+                sx={{ mb: 3 }}
+              >
+                <MenuItem value="">Selecione um desenvolvedor</MenuItem>
+                {developers.map((dev) => (
+                  <MenuItem key={dev.id} value={dev.id}>
+                    {dev.name}
+                  </MenuItem>
+                ))}
+              </TextField>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="genreID">
-            Gênero *
-          </label>
-          <select
-            id="genreID"
-            name="genreID"
-            value={gameData.genreID}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          >
-            <option value="">Selecione um gênero</option>
-            {genres.map(genre => (
-              <option key={genre.id} value={genre.id}>{genre.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="platformID">
-            Plataforma *
-          </label>
-          <select
-            id="platformID"
-            name="platformID"
-            value={gameData.platformID}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          >
-            <option value="">Selecione uma plataforma</option>
-            {platforms.map(platform => (
-              <option key={platform.id} value={platform.id}>{platform.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="developerID">
-            Desenvolvedor *
-          </label>
-          <select
-            id="developerID"
-            name="developerID"
-            value={gameData.developerID}
-            onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          >
-            <option value="">Selecione um desenvolvedor</option>
-            {developers.map(developer => (
-              <option key={developer.id} value={developer.id}>{developer.name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Atualizar Jogo
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/games')}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+              <Box display="flex" justifyContent="flex-end" gap={2}>
+                <Button variant="outlined" onClick={() => navigate('/gamesAdmin')}>
+                  Cancelar
+                </Button>
+                <Button type="submit" variant="contained" color="primary">
+                  Atualizar Jogo
+                </Button>
+              </Box>
+            </Box>
+          </>
+        )}
+      </Box>
+    </ThemeProvider>
   );
 }
 
