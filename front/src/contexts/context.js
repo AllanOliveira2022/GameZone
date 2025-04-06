@@ -50,11 +50,12 @@ export function AuthProvider({ children }) {
       setLoading(true);
       setError(null);
       
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/login', { email, password });
       const { token, user } = response.data;
       
       // Salva o token no localStorage
       localStorage.setItem('token', token);
+      localStorage.setItem('name', user.name);
       
       // Configura o token para todas as requisições futuras
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -106,6 +107,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     // Remove o token do localStorage
     localStorage.removeItem('token');
+    localStorage.removeItem('id');
     
     // Remove o cabeçalho de autorização
     delete api.defaults.headers.common['Authorization'];

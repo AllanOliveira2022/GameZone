@@ -1,24 +1,122 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BuyService } from '../../services/buyService';
+import UserService from '../../services/userService';
 import {
   Grid,
-  Card,
-  CardContent,
   Typography,
-  Button,
   TextField,
   Box,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider
+  ThemeProvider,
+  createTheme,
+  alpha,
+  Card,
+  CardContent,
+  Button,
+  Tooltip
 } from '@mui/material';
-import { Add, Search, ShoppingCart, AttachMoney, Person } from '@mui/icons-material';
-import { BuyService } from '../../services/buyService';
+import { 
+  Search, 
+  Receipt, 
+  FilterAlt, 
+  RefreshOutlined, 
+  PersonOutline, 
+  AttachMoney, 
+  DateRange,
+  TrendingUp
+} from '@mui/icons-material';
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#AEEA00',
+      contrastText: '#000000',
+    },
+    secondary: {
+      main: '#7CB342',
+      contrastText: '#000000',
+    },
+    error: {
+      main: '#FF5252',
+    },
+    success: {
+      main: '#69F0AE',
+    },
+    warning: {
+      main: '#FFD740',
+    },
+    info: {
+      main: '#40C4FF',
+    },
+    background: {
+      default: '#121212',
+      paper: '#1E1E1E',
+    },
+    text: {
+      primary: '#FFFFFF',
+      secondary: '#B0B0B0',
+    },
+  },
+  components: {
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: '1px solid #333333',
+        },
+        head: {
+          backgroundColor: '#121212',
+          color: '#AEEA00',
+          fontWeight: 'bold',
+        }
+      }
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          '&:hover': {
+            backgroundColor: 'rgba(174, 234, 0, 0.08) !important',
+          },
+        }
+      }
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        }
+      }
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#1A1A1A',
+          borderRadius: 12,
+        }
+      }
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+        }
+      }
+    }
+  },
+});
 
 function BuysAdmin() {
   const navigate = useNavigate();
@@ -30,195 +128,627 @@ function BuysAdmin() {
     limit: 10,
     total: 0
   });
+  const [filters, setFilters] = useState({
+    userId: '',
+    startDate: '',
+    endDate: '',
+    minTotal: '',
+    maxTotal: ''
+  });
+  const [users, setUsers] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [stats, setStats] = useState({
+    totalPurchases: 0,
+    totalRevenue: 0,
+    recentPurchases: 0,
+    last7DaysRevenue: 0
+  });
 
   useEffect(() => {
-    fetchBuys();
-  }, [pagination.page, pagination.limit, searchTerm]);
+    const fetchInitialData = async () => {
+      try {
+        const usersRes = await UserService.getUsers();
+        setUsers(usersRes.users || []);
+        fetchBuys();
+      } catch (err) {
+        console.error('Error loading initial data:', err);
+        setLoading(false);
+      }
+    };
 
-  const fetchBuys = async () => {
-    try {
-      setLoading(true);
-      const result = await BuyService.getBuys(pagination.page, pagination.limit);
-      setBuys(result.data);
-      setPagination(prev => ({
-        ...prev,
-        total: result.total
-      }));
-    } catch (error) {
-      console.error('Erro ao carregar vendas:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchBuys = async () => {
+      try {
+        setLoading(true);
+        
+        const params = {
+          page: pagination.page,
+          limit: pagination.limit,
+          search: searchTerm,
+          ...filters
+        };
+        
+        const response = await BuyService.getBuys(params.page, params.limit);
+        
+        const processedBuys = response.data.map(buy => ({
+          ...buy,
+          total: Number(buy.price || buy.total) || 0,
+          createdAt: new Date(buy.dateBuy || buy.createdAt).toLocaleString(),
+          userName: buy.comprador?.name || (buy.user?.name || ''),
+          userEmail: buy.comprador?.email || (buy.user?.email || '')
+        }));
+        
+        setBuys(processedBuys);
+        setPagination(prev => ({
+          ...prev,
+          total: response.total
+        }));
 
-  const handleAddBuy = () => {
-    navigate('/createBuy');
-  };
+        // Calculate statistics
+        const totalRevenue = processedBuys.reduce((sum, buy) => sum + buy.total, 0);
+        const last7DaysRevenue = processedBuys
+          .filter(buy => new Date(buy.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
+          .reduce((sum, buy) => sum + buy.total, 0);
+        
+        setStats({
+          totalPurchases: response.total || processedBuys.length,
+          totalRevenue: totalRevenue,
+          recentPurchases: processedBuys.filter(buy => 
+            new Date(buy.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
+          ).length,
+          last7DaysRevenue: last7DaysRevenue
+        });
+      } catch (err) {
+        console.error('Error loading purchases:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [filters, pagination.page, pagination.limit, searchTerm]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      userId: '',
+      startDate: '',
+      endDate: '',
+      minTotal: '',
+      maxTotal: ''
+    });
+  };
+
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
   };
 
-  const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-    return new Date(dateString).toLocaleDateString('pt-BR', options);
+  const formatCurrency = (value) => {
+    return `R$ ${value.toFixed(2)}`;
   };
 
-  const calculateTotal = (games) => {
-    return games.reduce((total, game) => total + (game.price * game.quantity), 0);
+  const getStatusColor = (status) => {
+    switch(status?.toLowerCase()) {
+      case 'cancelado': return 'error';
+      case 'pendente': return 'warning';
+      case 'processando': return 'info';
+      default: return 'success';
+    }
+  };
+
+  const extractGamesFromItems = (buy) => {
+    if (buy.itensCompra && Array.isArray(buy.itensCompra)) {
+      return buy.itensCompra.map(item => item.jogo || {
+        id: item.gameID,
+        name: item.gameName || `Jogo #${item.gameID}`
+      });
+    }
+    
+    if (buy.games && Array.isArray(buy.games)) {
+      return buy.games;
+    }
+    
+    return [];
   };
 
   return (
-    <Box sx={{ padding: '20px' }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Gerenciamento de Vendas</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Add />}
-          onClick={handleAddBuy}
-        >
-          Registrar Venda
-        </Button>
-      </Box>
-
-      <Box mb={3}>
-        <TextField
-          variant="outlined"
-          placeholder="Pesquisar vendas..."
-          fullWidth
-          InputProps={{
-            startAdornment: <Search sx={{ marginRight: '8px' }} />
-          }}
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-      </Box>
-
-      {loading ? (
-        <Box display="flex" justifyContent="center" mt={4}>
-          <CircularProgress />
+    <ThemeProvider theme={darkTheme}>
+      <Box sx={{ 
+        padding: '24px', 
+        backgroundColor: '#121212', 
+        minHeight: '100vh',
+        color: '#FFFFFF'
+      }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+          <Typography variant="h4" sx={{ 
+            color: '#AEEA00',
+            fontWeight: 'bold',
+            textShadow: '0px 0px 8px rgba(174, 234, 0, 0.3)'
+          }}>
+            Histórico de Compras
+          </Typography>
         </Box>
-      ) : (
-        <>
-          <Grid container spacing={3}>
-            {buys.map((buy) => (
-              <Grid item xs={12} key={buy.id}>
-                <Card>
-                  <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                      <Box>
-                        <Typography variant="h6" component="span" sx={{ mr: 2 }}>
-                          Venda #{buy.id}
-                        </Typography>
-                        <Chip 
-                          label={formatDate(buy.createdAt)} 
-                          size="small" 
-                          color="info"
-                          variant="outlined"
-                        />
-                      </Box>
-                      <Typography variant="h6" color="primary">
-                        Total: R$ {calculateTotal(buy.games).toFixed(2)}
-                      </Typography>
-                    </Box>
 
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <Person color="action" sx={{ mr: 1 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Cliente: {buy.user?.name || 'Anônimo'}
-                      </Typography>
-                    </Box>
-
-                    <Typography variant="subtitle2" gutterBottom>
-                      Itens da compra:
-                    </Typography>
-                    
-                    <List dense sx={{ mb: 2 }}>
-                      {buy.games.map((game, index) => (
-                        <React.Fragment key={index}>
-                          <ListItem>
-                            <ListItemAvatar>
-                              <Avatar src={game.imageUrl} variant="square">
-                                <SportsEsports />
-                              </Avatar>
-                            </ListItemAvatar>
-                            <ListItemText
-                              primary={game.name}
-                              secondary={`${game.quantity}x R$ ${game.price.toFixed(2)}`}
-                            />
-                            <Typography variant="body2">
-                              R$ {(game.price * game.quantity).toFixed(2)}
-                            </Typography>
-                          </ListItem>
-                          {index < buy.games.length - 1 && <Divider variant="inset" component="li" />}
-                        </React.Fragment>
-                      ))}
-                    </List>
-
-                    <Box display="flex" justifyContent="flex-end" gap={1}>
-                      <Button
-                        variant="outlined"
-                        color="info"
-                        size="small"
-                        onClick={() => navigate(`/buys/${buy.id}`)}
-                      >
-                        Detalhes
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        size="small"
-                        onClick={() => navigate(`/updateBuy/${buy.id}`)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        onClick={() => navigate(`/deleteBuy/${buy.id}`)}
-                      >
-                        Excluir
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+        {/* Stats Cards - Now with 4 cards including last 7 days revenue */}
+        <Grid container spacing={3} mb={4}>
+          <Grid item xs={12} sm={6} lg={3}>
+            <Card sx={{ 
+              borderLeft: '4px solid #AEEA00',
+              height: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}>
+              <CardContent>
+                <Typography color="text.secondary" gutterBottom>
+                  Total de Compras
+                </Typography>
+                <Typography variant="h4" sx={{ color: '#AEEA00', fontWeight: 'bold' }}>
+                  {stats.totalPurchases}
+                </Typography>
+                <Box display="flex" justifyContent="flex-end" mt={1}>
+                  <Receipt sx={{ color: 'rgba(174, 234, 0, 0.6)', fontSize: 40 }} />
+                </Box>
+              </CardContent>
+            </Card>
           </Grid>
+          <Grid item xs={12} sm={6} lg={3}>
+            <Card sx={{ 
+              borderLeft: '4px solid #69F0AE',
+              height: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}>
+              <CardContent>
+                <Typography color="text.secondary" gutterBottom>
+                  Receita Total
+                </Typography>
+                <Typography variant="h4" sx={{ color: '#69F0AE', fontWeight: 'bold' }}>
+                  {formatCurrency(stats.totalRevenue)}
+                </Typography>
+                <Box display="flex" justifyContent="flex-end" mt={1}>
+                  <AttachMoney sx={{ color: 'rgba(105, 240, 174, 0.6)', fontSize: 40 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} lg={3}>
+            <Card sx={{ 
+              borderLeft: '4px solid #FFD740',
+              height: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}>
+              <CardContent>
+                <Typography color="text.secondary" gutterBottom>
+                  Compras Recentes (7 dias)
+                </Typography>
+                <Typography variant="h4" sx={{ color: '#FFD740', fontWeight: 'bold' }}>
+                  {stats.recentPurchases}
+                </Typography>
+                <Box display="flex" justifyContent="flex-end" mt={1}>
+                  <DateRange sx={{ color: 'rgba(255, 215, 64, 0.6)', fontSize: 40 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} lg={3}>
+            <Card sx={{ 
+              borderLeft: '4px solid #40C4FF',
+              height: '100%',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+            }}>
+              <CardContent>
+                <Typography color="text.secondary" gutterBottom>
+                  Receita (7 dias)
+                </Typography>
+                <Typography variant="h4" sx={{ color: '#40C4FF', fontWeight: 'bold' }}>
+                  {formatCurrency(stats.last7DaysRevenue)}
+                </Typography>
+                <Box display="flex" justifyContent="flex-end" mt={1}>
+                  <TrendingUp sx={{ color: 'rgba(64, 196, 255, 0.6)', fontSize: 40 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
 
-          <Box mt={3} display="flex" justifyContent="center">
-            <Button
-              disabled={pagination.page === 1}
-              onClick={() => handlePageChange(pagination.page - 1)}
-            >
-              Anterior
-            </Button>
-            <Typography sx={{ margin: '0 16px', alignSelf: 'center' }}>
-              Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
+        {/* Search and Filters */}
+        <Card sx={{ mb: 4, p: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
+          <CardContent>
+            <Box mb={3}>
+              <TextField
+                variant="outlined"
+                placeholder="Pesquisar por ID, usuário ou jogos..."
+                fullWidth
+                InputProps={{
+                  startAdornment: <Search sx={{ marginRight: '8px', color: '#AEEA00' }} />,
+                  sx: { 
+                    borderRadius: 2,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(174, 234, 0, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(174, 234, 0, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#AEEA00'
+                    }
+                  }
+                }}
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Button 
+                startIcon={<FilterAlt />}
+                onClick={() => setShowFilters(!showFilters)}
+                color="primary"
+                variant={showFilters ? "contained" : "outlined"}
+              >
+                {showFilters ? "Ocultar Filtros" : "Mostrar Filtros"}
+              </Button>
+              
+              {showFilters && (
+                <Button 
+                  startIcon={<RefreshOutlined />}
+                  onClick={resetFilters}
+                  color="secondary"
+                >
+                  Limpar Filtros
+                </Button>
+              )}
+            </Box>
+
+            {showFilters && (
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 2, 
+                flexWrap: 'wrap',
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: alpha('#000000', 0.3)
+              }}>
+                <FormControl sx={{ minWidth: 180 }}>
+                  <InputLabel id="user-filter-label" sx={{ color: '#AEEA00' }}>Usuário</InputLabel>
+                  <Select
+                    labelId="user-filter-label"
+                    label="Usuário"
+                    name="userId"
+                    value={filters.userId}
+                    onChange={handleFilterChange}
+                    sx={{
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(174, 234, 0, 0.3)'
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(174, 234, 0, 0.5)'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#AEEA00'
+                      }
+                    }}
+                  >
+                    <MenuItem value="">Todos</MenuItem>
+                    {users.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.name || user.email}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <TextField
+                  label="Data inicial"
+                  name="startDate"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={handleFilterChange}
+                  InputLabelProps={{ 
+                    shrink: true,
+                    sx: { color: '#69F0AE' }
+                  }}
+                  sx={{ 
+                    minWidth: 180,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(105, 240, 174, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(105, 240, 174, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#69F0AE'
+                    }
+                  }}
+                />
+
+                <TextField
+                  label="Data final"
+                  name="endDate"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={handleFilterChange}
+                  InputLabelProps={{ 
+                    shrink: true,
+                    sx: { color: '#69F0AE' }
+                  }}
+                  sx={{ 
+                    minWidth: 180,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(105, 240, 174, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(105, 240, 174, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#69F0AE'
+                    }
+                  }}
+                />
+
+                <TextField
+                  label="Valor mínimo"
+                  name="minTotal"
+                  type="number"
+                  value={filters.minTotal}
+                  onChange={handleFilterChange}
+                  InputProps={{ 
+                    inputProps: { min: 0 },
+                    startAdornment: <Box component="span" mr={1}>R$</Box>
+                  }}
+                  InputLabelProps={{ 
+                    sx: { color: '#40C4FF' }
+                  }}
+                  sx={{ 
+                    minWidth: 150,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(64, 196, 255, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(64, 196, 255, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#40C4FF'
+                    }
+                  }}
+                />
+
+                <TextField
+                  label="Valor máximo"
+                  name="maxTotal"
+                  type="number"
+                  value={filters.maxTotal}
+                  onChange={handleFilterChange}
+                  InputProps={{ 
+                    inputProps: { min: 0 },
+                    startAdornment: <Box component="span" mr={1}>R$</Box>
+                  }}
+                  InputLabelProps={{ 
+                    sx: { color: '#40C4FF' }
+                  }}
+                  sx={{ 
+                    minWidth: 150,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(64, 196, 255, 0.3)'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(64, 196, 255, 0.5)'
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#40C4FF'
+                    }
+                  }}
+                />
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+
+        {loading ? (
+          <Box display="flex" justifyContent="center" mt={8} mb={8}>
+            <CircularProgress sx={{ color: '#AEEA00' }} size={60} thickness={4} />
+          </Box>
+        ) : buys.length === 0 ? (
+          <Card sx={{ 
+            textAlign: 'center', 
+            py: 8,
+            backgroundColor: alpha('#000000', 0.5),
+            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            border: '1px dashed rgba(174, 234, 0, 0.3)'
+          }}>
+            <Typography variant="h6" color="text.secondary">
+              Nenhuma compra encontrada com os filtros selecionados.
             </Typography>
             <Button
-              disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
-              onClick={() => handlePageChange(pagination.page + 1)}
+              variant="outlined"
+              color="primary"
+              onClick={resetFilters}
+              sx={{ mt: 2 }}
             >
-              Próxima
+              Limpar filtros
             </Button>
-          </Box>
-        </>
-      )}
-    </Box>
+          </Card>
+        ) : (
+          <>
+            <TableContainer 
+              component={Paper} 
+              sx={{ 
+                boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                borderRadius: 2,
+                overflow: 'hidden',
+                mb: 3
+              }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell width="10%">ID</TableCell>
+                    <TableCell width="20%">Data da Compra</TableCell>
+                    <TableCell width="25%">Usuário</TableCell>
+                    <TableCell width="30%">Itens</TableCell>
+                    <TableCell width="10%">Valor Total</TableCell>
+                    <TableCell width="5%">Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {buys.map((buy) => {
+                    const games = extractGamesFromItems(buy);
+                    
+                    return (
+                      <TableRow 
+                        key={buy.id} 
+                        hover
+                        onClick={() => navigate(`/buys/${buy.id}`)}
+                        sx={{ cursor: 'pointer' }}
+                      >
+                        <TableCell sx={{ color: '#AEEA00', fontWeight: 'medium' }}>
+                          #{buy.id}
+                        </TableCell>
+                        <TableCell>{buy.createdAt}</TableCell>
+                        <TableCell>
+                          <Typography sx={{ display: 'flex', alignItems: 'center' }}>
+                            <PersonOutline sx={{ mr: 1, color: '#40C4FF' }} />
+                            {buy.userName || 'Nome indisponível'}
+                            {buy.userEmail && (
+                              <Typography component="span" color="text.secondary" sx={{ ml: 0.5 }}>
+                                ({buy.userEmail})
+                              </Typography>
+                            )}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {games.length > 0 ? (
+                              games.length > 3 ? (
+                                <>
+                                  {games.slice(0, 2).map(game => (
+                                    <Chip 
+                                      key={game.id} 
+                                      label={game.name} 
+                                      size="small" 
+                                      variant="outlined"
+                                      sx={{ 
+                                        borderColor: 'rgba(105, 240, 174, 0.5)',
+                                        color: '#FFFFFF'
+                                      }}
+                                    />
+                                  ))}
+                                  <Tooltip title={`${games.length - 2} jogos adicionais`}>
+                                    <Chip 
+                                      label={`+${games.length - 2}`} 
+                                      size="small"
+                                      color="primary"
+                                      sx={{ fontWeight: 'bold' }}
+                                    />
+                                  </Tooltip>
+                                </>
+                              ) : (
+                                games.map(game => (
+                                  <Chip 
+                                    key={game.id} 
+                                    label={game.name} 
+                                    size="small" 
+                                    variant="outlined"
+                                    sx={{ 
+                                      borderColor: 'rgba(105, 240, 174, 0.5)',
+                                      color: '#FFFFFF'
+                                    }}
+                                  />
+                                ))
+                              )
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                {buy.itensCompra ? `${buy.itensCompra.length} itens` : 'N/A'}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ 
+                          color: '#69F0AE', 
+                          fontWeight: 'bold',
+                          fontSize: '1.05rem'
+                        }}>
+                          {formatCurrency(buy.total)}
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={buy.status || 'Concluído'} 
+                            color={getStatusColor(buy.status)}
+                            size="small"
+                            sx={{ fontWeight: 'medium' }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Box mt={4} display="flex" justifyContent="center" alignItems="center">
+              <Button
+                disabled={pagination.page === 1}
+                onClick={() => handlePageChange(pagination.page - 1)}
+                variant="outlined"
+                color="primary"
+                sx={{ 
+                  mr: 2,
+                  opacity: pagination.page === 1 ? 0.5 : 1,
+                  '&.Mui-disabled': {
+                    borderColor: 'rgba(174, 234, 0, 0.2)',
+                    color: 'rgba(174, 234, 0, 0.2)'
+                  }
+                }}
+              >
+                Anterior
+              </Button>
+              <Card sx={{ 
+                display: 'flex', 
+                px: 3, 
+                py: 1, 
+                backgroundColor: alpha('#000000', 0.5),
+                border: '1px solid rgba(174, 234, 0, 0.3)'
+              }}>
+                <Typography sx={{ 
+                  color: '#AEEA00', 
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}>
+                  Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
+                </Typography>
+              </Card>
+              <Button
+                disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
+                onClick={() => handlePageChange(pagination.page + 1)}
+                variant="outlined"
+                color="primary"
+                sx={{ 
+                  ml: 2,
+                  opacity: pagination.page >= Math.ceil(pagination.total / pagination.limit) ? 0.5 : 1,
+                  '&.Mui-disabled': {
+                    borderColor: 'rgba(174, 234, 0, 0.2)',
+                    color: 'rgba(174, 234, 0, 0.2)'
+                  }
+                }}
+              >
+                Próxima
+              </Button>
+            </Box>
+          </>
+        )}
+      </Box>
+    </ThemeProvider>
   );
 }
 

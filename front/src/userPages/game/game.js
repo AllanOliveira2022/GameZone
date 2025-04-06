@@ -40,11 +40,55 @@ function Game() {
   const handlePurchase = async () => {
     try {
       setPurchasing(true);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // 1. Obter ID do usuário autenticado (armazenado durante o login)
+      const userId = localStorage.getItem('id'); // Ou sessionStorage
+      
+      if (!userId) {
+        throw new Error('Usuário não autenticado. Faça login para continuar.');
+      }
+  
+      // 2. Validar preço do jogo
+      if (!gameData?.price || isNaN(parseFloat(gameData.price)) || parseFloat(gameData.price) <= 0) {
+        throw new Error('Preço do jogo inválido. Não é possível completar a compra.');
+      }
+  
+      // 3. Preparar os dados da compra
+      const buyData = {
+        userID: userId,
+        dateBuy: new Date().toISOString(), // Data atual no formato ISO
+        items: [{
+          gameID: gameData.id,
+          priceBuy: parseFloat(gameData.price).toFixed(2) // Garantir formato decimal
+        }]
+      };
+  
+      // 4. Chamar o serviço de compra
+      await BuyService.createBuy(buyData);
+      
+      // 5. Mostrar feedback de sucesso
       setPurchaseSuccess(true);
+      
+      // 6. Redirecionar para biblioteca após 2 segundos
       setTimeout(() => navigate('/library'), 2000);
+  
     } catch (err) {
-      setError('Erro ao processar compra');
+      console.error('Erro na compra:', err);
+      
+      // Tratamento específico para jogos inválidos
+      if (err.invalidGames) {
+        setError('Jogo não disponível para compra no momento.');
+      } 
+      // Tratamento para usuário não autenticado
+      else if (err.message.includes('não autenticado')) {
+        setError(err.message);
+        setTimeout(() => navigate('/login'), 2000); // Redireciona para login
+      }
+      // Outros erros
+      else {
+        setError(err.message || 'Erro ao processar sua compra. Tente novamente.');
+      }
+      
     } finally {
       setPurchasing(false);
     }

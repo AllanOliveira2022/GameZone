@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 
+// Verifica se o usuário é ADMIN
 const ProtectedRouteAdmin = ({ children }) => {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
@@ -13,4 +14,15 @@ const ProtectedRouteAdmin = ({ children }) => {
   return children;
 };
 
-export default ProtectedRouteAdmin;
+// Verifica se o usuário está LOGADO (qualquer papel)
+const ProtectedRouteUser = ({ children }) => {
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+export { ProtectedRouteAdmin, ProtectedRouteUser };

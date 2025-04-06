@@ -7,12 +7,17 @@ import {
   Typography,
   Grid,
   Fade,
-  Button
+  Button,
+  Paper,
+  useMediaQuery,
+  Container
 } from "@mui/material";
+import LogoutIcon from '@mui/icons-material/Logout';
 import { createTheme } from "@mui/material/styles";
 import GameCard from "../../components/gameCard/gameCard";
 import Menu from "../../components/menu/menu";
 import { GameService } from '../../services/gameService';
+import { useNavigate } from "react-router-dom";
 
 // Definindo as cores da paleta como constantes
 const colors = {
@@ -60,6 +65,21 @@ const theme = createTheme({
       main: colors.success
     }
   },
+  typography: {
+    // Ajuste de tipografia para melhor responsividade
+    h5: {
+      fontSize: '1.25rem',
+      '@media (min-width:600px)': {
+        fontSize: '1.5rem',
+      },
+    },
+    body1: {
+      fontSize: '0.875rem',
+      '@media (min-width:600px)': {
+        fontSize: '1rem',
+      },
+    }
+  },
   components: {
     MuiCard: {
       styleOverrides: {
@@ -80,6 +100,12 @@ const theme = createTheme({
         root: {
           fontWeight: 'bold',
           textTransform: 'none',
+          fontSize: '0.8rem',
+          padding: '6px 12px',
+          '@media (min-width:600px)': {
+            fontSize: '0.875rem',
+            padding: '8px 16px',
+          },
           '&.Mui-disabled': {
             backgroundColor: colors.background200,
             color: colors.neutral600
@@ -123,11 +149,15 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
+  const [userName, setUserName] = useState("");
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0
   });
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   const loadGames = async (filters = {}, page = 1) => {
     setLoading(true);
@@ -167,6 +197,10 @@ function Home() {
   };
 
   useEffect(() => {
+    // Carregar o nome do usuário do localStorage
+    const storedUserName = localStorage.getItem('name');
+    setUserName(storedUserName || "Visitante");
+    
     loadGames();
   }, []);
 
@@ -174,39 +208,104 @@ function Home() {
     loadGames(filters, newPage);
   };
 
+  const handleLogout = () => {
+    // Limpar dados do usuário no localStorage
+    localStorage.removeItem('name');
+    localStorage.removeItem('token');
+    localStorage.removeItem('id');
+    // Redirecionar para a página de login
+    navigate('/');
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Menu onFilter={handleFilter} />
       
-      <Box  id="main-content"
+      <Box 
         component="main"
         sx={{
-          py: { xs: 5, sm: 5, md: 5 },
-          pl: { xs: 3, sm: 3, md: 3 },
+          py: { xs: 3, sm: 4, md: 5 },
+          px: { xs: 2, sm: 2, md: 3 },
           minHeight: "100vh",
           backgroundColor: colors.background400,
           width: '100%',
           overflow: 'hidden'
         }}
       >
-        <Box
-          sx={{
-            maxWidth: 1600,
+        <Container 
+          maxWidth="xl" 
+          disableGutters 
+          sx={{ 
             mx: 'auto',
-            px: { xs: 2, sm: 3, md: 4 }
+            px: { xs: 1, sm: 2, md: 3 }
           }}
         >
+          {/* Cabeçalho com mensagem de boas-vindas e botão de logout - Responsivo */}
+          <Paper
+            elevation={3}
+            sx={{
+              mb: { xs: 2, sm: 3, md: 4 },
+              p: { xs: 2, sm: 3 },
+              backgroundColor: colors.background300,
+              borderLeft: `4px solid ${colors.primary500}`,
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'space-between',
+              alignItems: { xs: 'stretch', sm: 'center' },
+              gap: { xs: 2, sm: 2 }
+            }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  color: colors.textPrimary,
+                  mb: 0.5,
+                  fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' }
+                }}
+              >
+                Bem-vindo, {userName}!
+              </Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: colors.textSecondary,
+                  fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' }
+                }}
+              >
+                Aproveite nosso catálogo de jogos
+              </Typography>
+            </Box>
+            
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<LogoutIcon />}
+              onClick={handleLogout}
+              fullWidth={isMobile}
+              size={isMobile ? "small" : "medium"}
+              sx={{
+                mt: { xs: 1, sm: 0 },
+                minWidth: { xs: '100%', sm: '120px' },
+                height: { xs: '40px', sm: 'auto' }
+              }}
+            >
+              {isMobile ? "Sair" : "Sair do Sistema"}
+            </Button>
+          </Paper>
+
           {/* Estado de loading */}
           {loading && (
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'center', 
               alignItems: 'center',
-              height: 'calc(100vh - 250px)'
+              height: { xs: 'calc(100vh - 250px)', sm: 'calc(100vh - 300px)', md: 'calc(100vh - 350px)' }
             }}>
               <CircularProgress 
                 color="primary" 
-                size={60} 
+                size={isMobile ? 40 : 60} 
                 thickness={4} 
                 sx={{ color: colors.primary500 }}
               />
@@ -218,13 +317,14 @@ function Home() {
             <Alert 
               severity="error"
               sx={{ 
-                mb: 4,
+                mb: { xs: 2, sm: 3, md: 4 },
                 backgroundColor: colors.background300,
                 border: `1px solid ${colors.error}`,
                 color: colors.textPrimary,
                 '& .MuiAlert-message': { 
                   width: '100%', 
-                  textAlign: 'center' 
+                  textAlign: 'center',
+                  fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' }
                 }
               }}
             >
@@ -236,12 +336,12 @@ function Home() {
           {!loading && !error && games.length === 0 && (
             <Box sx={{ 
               textAlign: 'center', 
-              py: 4,
+              py: { xs: 2, sm: 3, md: 4 },
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              height: 'calc(100vh - 250px)'
+              height: { xs: 'calc(100vh - 250px)', sm: 'calc(100vh - 300px)', md: 'calc(100vh - 350px)' }
             }}>
               <Typography 
                 variant="h4" 
@@ -249,52 +349,63 @@ function Home() {
                   mb: 2,
                   color: colors.primary500,
                   textShadow: `0 0 10px ${colors.primary700}`,
-                  fontWeight: 'bold'
+                  fontWeight: 'bold',
+                  fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' }
                 }}
               >
                 Nenhum jogo encontrado
               </Typography>
-              <Typography variant="body1" sx={{ color: colors.neutral600 }}>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: colors.neutral600,
+                  fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' }
+                }}
+              >
                 Tente ajustar os filtros ou pesquisa
               </Typography>
             </Box>
           )}
 
-          {/* Grade de jogos com animação */}
+          {/* Grade de jogos com animação - Responsiva */}
           <Grid 
             container 
-            spacing={{ xs: 2, sm: 3, md: 4 }}
-            columns={{ xs: 2, sm: 8, md: 12 }}
+            spacing={{ xs: 1, sm: 2, md: 3, lg: 4 }}
+            columns={{ xs: 2, sm: 6, md: 9, lg: 12 }}
           >
             {!loading && !error && games.map((game, index) => (
               <Fade 
                 in={true} 
-                timeout={500} 
-                style={{ transitionDelay: `${index * 100}ms` }}
+                timeout={300} 
+                style={{ transitionDelay: `${index * 75}ms` }}
                 key={game.id}
               >
-                <Grid item xs={2} sm={4} md={4}>
+                <Grid item xs={2} sm={3} md={3} lg={4}>
                   <GameCard game={game} />
                 </Grid>
               </Fade>
             ))}
           </Grid>
 
-          {/* Paginação */}
+          {/* Paginação - Responsiva */}
           {!loading && games.length > 0 && (
             <Box sx={{ 
               display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
               justifyContent: 'center', 
               alignItems: 'center',
-              mt: 4,
-              gap: 3
+              mt: { xs: 3, sm: 4 },
+              gap: { xs: 2, sm: 3 }
             }}>
               <Button
                 variant="contained"
                 onClick={() => handlePageChange(pagination.page - 1)}
                 disabled={pagination.page === 1}
+                fullWidth={isMobile}
+                size={isMobile ? "small" : "medium"}
                 sx={{
-                  minWidth: 100
+                  minWidth: { xs: '100%', sm: '100px' },
+                  order: { xs: 2, sm: 1 }
                 }}
               >
                 Anterior
@@ -304,7 +415,9 @@ function Home() {
                 variant="body1" 
                 sx={{ 
                   color: colors.textSecondary,
-                  fontWeight: 'medium'
+                  fontWeight: 'medium',
+                  fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
+                  order: { xs: 1, sm: 2 }
                 }}
               >
                 Página {pagination.page} de {Math.ceil(pagination.total / pagination.limit)}
@@ -314,15 +427,18 @@ function Home() {
                 variant="contained"
                 onClick={() => handlePageChange(pagination.page + 1)}
                 disabled={pagination.page * pagination.limit >= pagination.total}
+                fullWidth={isMobile}
+                size={isMobile ? "small" : "medium"}
                 sx={{
-                  minWidth: 100
+                  minWidth: { xs: '100%', sm: '100px' },
+                  order: { xs: 3, sm: 3 }
                 }}
               >
                 Próxima
               </Button>
             </Box>
           )}
-        </Box>
+        </Container>
       </Box>
     </ThemeProvider>
   );

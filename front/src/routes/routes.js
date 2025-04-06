@@ -7,7 +7,7 @@ import Register from "../userPages/register/register";
 import Game from "../userPages/game/game";
 import Library from "../userPages/library/library";
 import HomeAdmin from "../adminPages/home/home";
-import ProtectedRouteAdmin from "../components/midgame"; // ajuste o caminho se necessário
+import {ProtectedRouteAdmin, ProtectedRouteUser} from "../components/midgame"; // ajuste o caminho se necessário
 
 import CreateGame from "../adminPages/games/createGame/createGame";
 import UpdateGame from "../adminPages/games/updateGame/updateGame";
@@ -29,6 +29,7 @@ import GamesAdmin from "../adminPages/games/games";
 import GenresAdmin from "../adminPages/genres/genres";
 import DevelopersAdmin from "../adminPages/developers/developers";
 import PlatformsAdmin from "../adminPages/platforms/platforms";
+import BuysAdmin from "../adminPages/buys/buys";
 
 
 const AppRoutes = () => {
@@ -36,7 +37,7 @@ const AppRoutes = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/home" element={<ProtectedRouteUser><Home /></ProtectedRouteUser>} />
         <Route path="/register" element={<Register />} />
         <Route path="/game/:id" element={<Game />} />
         <Route path="/library" element={<Library />} />
@@ -58,10 +59,11 @@ const AppRoutes = () => {
         <Route path="/updatePlatform/:id" element={<UpdatePlatform />} />
         <Route path="/deletePlatform/:id" element={<DeletePlatform />} />
 
-        <Route path="/gamesAdmin" element={<GamesAdmin/>}/>
-        <Route path="/genresAdmin" element={<GenresAdmin/>}/>
-        <Route path="/developersAdmin" element={<DevelopersAdmin/>}/>
-        <Route path="/platformsAdmin" element={<PlatformsAdmin/>}/>
+        <Route path="/gamesAdmin" element={<ProtectedRouteAdmin><GamesAdmin/></ProtectedRouteAdmin>}/>
+        <Route path="/genresAdmin" element={<ProtectedRouteAdmin><GenresAdmin/></ProtectedRouteAdmin>}/>
+        <Route path="/developersAdmin" element={<ProtectedRouteAdmin><DevelopersAdmin/></ProtectedRouteAdmin>}/>
+        <Route path="/platformsAdmin" element={<ProtectedRouteAdmin><PlatformsAdmin/></ProtectedRouteAdmin>}/>
+        <Route path="/buysAdmin" element={<ProtectedRouteAdmin><BuysAdmin/></ProtectedRouteAdmin>}/>
       </Routes>
     </BrowserRouter>
   );

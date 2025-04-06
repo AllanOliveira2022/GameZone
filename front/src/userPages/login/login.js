@@ -49,6 +49,8 @@ function Login() {
 
         localStorage.setItem('token', response.token);
         localStorage.setItem('role', response.role); // Armazenando o papel do usuário
+        localStorage.setItem('id', response.id);
+        localStorage.setItem('name', response.name);
 
         // Redirecionamento com base no role
         if (response.role === 'admin') {

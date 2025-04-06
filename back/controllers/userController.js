@@ -57,12 +57,11 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role }, 
+      { id: user.id, role: user.role, name:user.name}, 
       process.env.JWT_SECRET, 
       { expiresIn: '1h' }
     );
-
-    res.status(200).json({ message: 'Login bem-sucedido', token, role: user.role });
+    res.status(200).json({ message: 'Login bem-sucedido', token, role: user.role, id: user.id, name:user.name});
   } catch (error) {
     console.error('Erro ao fazer login:', error);
     res.status(500).json({ message: 'Erro ao fazer login' });

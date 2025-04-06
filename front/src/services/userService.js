@@ -28,6 +28,14 @@ const UserService = {
     }
   },
 
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('id');
+    // Você pode adicionar mais itens conforme o que estiver armazenando
+  },
+  
+
   getUsers: async () => {
     try {
       const response = await api.get('/users');
