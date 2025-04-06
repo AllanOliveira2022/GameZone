@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BuyService } from '../../services/buyService';
-import { useAuth } from '../../contexts/context'; // Assumindo que você tem um contexto de autenticação
+import { Navigate } from 'react-router-dom';
 
 function Library() {
   const [purchases, setPurchases] = useState([]);
@@ -8,8 +8,11 @@ function Library() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const { currentUser } = useAuth(); // Assumindo que você tem um hook de autenticação
-  const limit = 12; // Quantidade de jogos por página
+  const limit = 12;
+
+  // Verificação de autenticação via localStorage
+  const token = localStorage.getItem('token');
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     fetchUserPurchases();
@@ -18,14 +21,15 @@ function Library() {
   const fetchUserPurchases = async () => {
     try {
       setLoading(true);
-      // Se não temos um usuário autenticado, não podemos buscar as compras
-      if (!currentUser || !currentUser.id) {
+      
+      // Verifica se o usuário está autenticado
+      if (!token || !userId) {
         setError("Você precisa estar logado para ver sua biblioteca.");
         setLoading(false);
         return;
       }
 
-      const result = await BuyService.getUserBuys(currentUser.id, page, limit);
+      const result = await BuyService.getUserBuys(userId, page, limit);
       setPurchases(result.data);
       setTotalPages(Math.ceil(result.total / limit));
       setLoading(false);
@@ -47,6 +51,11 @@ function Library() {
       setPage(page + 1);
     }
   };
+
+  // Redireciona se não estiver autenticado
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   if (loading) {
     return (
