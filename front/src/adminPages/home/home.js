@@ -1,105 +1,75 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Box, 
-  Typography, 
-  Grid, 
-  Button,
-  Paper,
-  useTheme
-} from '@mui/material';
-import {
-  SportsEsports as GamesIcon,
-  Category as GenreIcon,
-  DeveloperMode as DeveloperIcon,
-  Computer as PlatformIcon
-} from '@mui/icons-material';
+import { Grid, Card, CardContent, Typography, Box } from '@mui/material';
+import '../../styles/homeAdmin/homeAdmin.css';
 
-function SimpleAdminPanel() {
-  const theme = useTheme();
+const sections = [
+  {
+    title: 'Gerenciamento de Jogos',
+    baseRoute: 'Game',
+    items: [
+      { label: 'Adicionar Jogo', description: 'Cadastre um novo jogo no sistema', action: 'create' },
+      { label: 'Editar Jogo', description: 'Atualize informações de jogos existentes', action: 'update' },
+      { label: 'Remover Jogo', description: 'Exclua jogos do catálogo', action: 'delete' }
+    ]
+  },
+  {
+    title: 'Gerenciamento de Gêneros',
+    baseRoute: 'Genre',
+    items: [
+      { label: 'Adicionar Gênero', description: 'Crie um novo gênero de jogos', action: 'create' },
+      { label: 'Editar Gênero', description: 'Atualize informações de gêneros', action: 'update' },
+      { label: 'Remover Gênero', description: 'Exclua gêneros existentes', action: 'delete' }
+    ]
+  }
+];
 
-  const adminSections = [
-    {
-      title: "Jogos",
-      icon: <GamesIcon fontSize="large" />,
-      color: theme.palette.primary.main,
-      to: "/gamesadmin"
-    },
-    {
-      title: "Gêneros",
-      icon: <GenreIcon fontSize="large" />,
-      color: theme.palette.secondary.main,
-      to: "/genresadmin"
-    },
-    {
-      title: "Desenvolvedores",
-      icon: <DeveloperIcon fontSize="large" />,
-      color: theme.palette.success.main,
-      to: "/developersadmin"
-    },
-    {
-      title: "Plataformas",
-      icon: <PlatformIcon fontSize="large" />,
-      color: theme.palette.warning.main,
-      to: "/buysadmin"
-    }
-  ];
-
+function AdminCard({ label, description, link }) {
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      backgroundColor: theme.palette.grey[100], 
-      p: 3,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center'
-    }}>
-      <Typography 
-        variant="h4" 
-        component="h1" 
-        sx={{ 
-          fontWeight: 'bold', 
-          color: theme.palette.text.primary,
-          mb: 6,
-          textAlign: 'center'
-        }}
-      >
-        Painel Administrativo
-      </Typography>
-      
-      <Grid container spacing={4} sx={{ maxWidth: '800px' }}>
-        {adminSections.map((section, index) => (
-          <Grid item xs={12} sm={6} key={index}>
-            <Button
-              component={Link}
-              to={section.to}
-              fullWidth
-              sx={{
-                height: '200px',
-                p: 3,
-                backgroundColor: section.color,
-                color: theme.palette.getContrastText(section.color),
-                '&:hover': {
-                  backgroundColor: section.color,
-                  opacity: 0.9,
-                  transform: 'scale(1.02)'
-                },
-                transition: 'all 0.3s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2
-              }}
-            >
-              {section.icon}
-              <Typography variant="h5" component="span">
-                {section.title}
-              </Typography>
-            </Button>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
+    <Grid item xs={12} sm={6} md={4}>
+      <Link to={`/${link}`} style={{ textDecoration: 'none' }}>
+        <Card sx={{ backgroundColor: 'var(--background-color2)', '&:hover': { backgroundColor: 'var(--background-color3)' } }}>
+          <CardContent>
+            <Typography variant="h6" color="text.primary" gutterBottom>{label}</Typography>
+            <Typography variant="body2" color="text.secondary">{description}</Typography>
+          </CardContent>
+        </Card>
+      </Link>
+    </Grid>
   );
 }
 
-export default SimpleAdminPanel;
+function HomeAdmin() {
+  return (
+    <div className="home-admin-container">
+      <Box sx={{ maxWidth: '1200px', margin: '0 auto', padding: '16px' }}>
+        <Typography variant="h3" color="text.primary" gutterBottom>Painel Administrativo</Typography>
+
+        {sections.map((section, index) => (
+          <Box
+            key={index}
+            sx={{ backgroundColor: 'var(--background-color3)', borderRadius: 2, boxShadow: 3, marginBottom: 4 }}
+          >
+            <Box sx={{ backgroundColor: 'var(--primary-color)', padding: 2, borderRadius: '8px 8px 0 0' }}>
+              <Typography variant="h4" sx={{ color: 'black' }} fontWeight="bold">
+                {section.title}
+              </Typography>
+            </Box>
+            <Grid container spacing={3} padding={3}>
+              {section.items.map((item, idx) => (
+                <AdminCard
+                  key={idx}
+                  label={item.label}
+                  description={item.description}
+                  link={`${item.action}${section.baseRoute}`}
+                />
+              ))}
+            </Grid>
+          </Box>
+        ))}
+      </Box>
+    </div>
+  );
+}
+
+export default HomeAdmin;
