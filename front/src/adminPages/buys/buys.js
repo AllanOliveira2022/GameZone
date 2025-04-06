@@ -26,7 +26,8 @@ import {
   Card,
   CardContent,
   Button,
-  Tooltip
+  Tooltip,
+  IconButton
 } from '@mui/material';
 import { 
   Search, 
@@ -36,7 +37,8 @@ import {
   PersonOutline, 
   AttachMoney, 
   DateRange,
-  TrendingUp
+  TrendingUp,
+  ArrowBack
 } from '@mui/icons-material';
 
 const darkTheme = createTheme({
@@ -121,6 +123,7 @@ const darkTheme = createTheme({
 function BuysAdmin() {
   const navigate = useNavigate();
   const [buys, setBuys] = useState([]);
+  const [filteredBuys, setFilteredBuys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [pagination, setPagination] = useState({
@@ -144,72 +147,118 @@ function BuysAdmin() {
     last7DaysRevenue: 0
   });
 
+  // Buscar dados iniciais
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const usersRes = await UserService.getUsers();
+        setLoading(true);
+        const [usersRes, buysRes] = await Promise.all([
+          UserService.getUsers(),
+          BuyService.getBuys()
+        ]);
+        
         setUsers(usersRes.users || []);
-        fetchBuys();
+        processBuysData(buysRes.data || buysRes);
       } catch (err) {
         console.error('Error loading initial data:', err);
-        setLoading(false);
-      }
-    };
-
-    const fetchBuys = async () => {
-      try {
-        setLoading(true);
-        
-        const params = {
-          page: pagination.page,
-          limit: pagination.limit,
-          search: searchTerm,
-          ...filters
-        };
-        
-        const response = await BuyService.getBuys(params.page, params.limit);
-        
-        const processedBuys = response.data.map(buy => ({
-          ...buy,
-          total: Number(buy.price || buy.total) || 0,
-          createdAt: new Date(buy.dateBuy || buy.createdAt).toLocaleString(),
-          userName: buy.comprador?.name || (buy.user?.name || ''),
-          userEmail: buy.comprador?.email || (buy.user?.email || '')
-        }));
-        
-        setBuys(processedBuys);
-        setPagination(prev => ({
-          ...prev,
-          total: response.total
-        }));
-
-        // Calculate statistics
-        const totalRevenue = processedBuys.reduce((sum, buy) => sum + buy.total, 0);
-        const last7DaysRevenue = processedBuys
-          .filter(buy => new Date(buy.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
-          .reduce((sum, buy) => sum + buy.total, 0);
-        
-        setStats({
-          totalPurchases: response.total || processedBuys.length,
-          totalRevenue: totalRevenue,
-          recentPurchases: processedBuys.filter(buy => 
-            new Date(buy.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
-          ).length,
-          last7DaysRevenue: last7DaysRevenue
-        });
-      } catch (err) {
-        console.error('Error loading purchases:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchInitialData();
-  }, [filters, pagination.page, pagination.limit, searchTerm]);
+  }, []);
 
+  // Processar dados das compras
+  const processBuysData = (buysData) => {
+    const processedBuys = buysData.map(buy => ({
+      ...buy,
+      total: Number(buy.price || buy.total) || 0,
+      createdAt: new Date(buy.dateBuy || buy.createdAt),
+      userName: buy.comprador?.name || (buy.user?.name || ''),
+      userEmail: buy.comprador?.email || (buy.user?.email || '')
+    }));
+
+    setBuys(processedBuys);
+    setFilteredBuys(processedBuys);
+    updatePagination(processedBuys);
+    calculateStatistics(processedBuys);
+  };
+
+  // Atualizar paginação
+  const updatePagination = (data) => {
+    setPagination(prev => ({
+      ...prev,
+      total: data.length,
+      page: 1 // Reset to first page when data changes
+    }));
+  };
+
+  // Calcular estatísticas
+  const calculateStatistics = (buysData) => {
+    const totalRevenue = buysData.reduce((sum, buy) => sum + buy.total, 0);
+    const last7DaysBuys = buysData.filter(buy => 
+      buy.createdAt.getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
+    );
+    
+    setStats({
+      totalPurchases: buysData.length,
+      totalRevenue: totalRevenue,
+      recentPurchases: last7DaysBuys.length,
+      last7DaysRevenue: last7DaysBuys.reduce((sum, buy) => sum + buy.total, 0)
+    });
+  };
+
+  // Aplicar filtros e pesquisa
+  useEffect(() => {
+    if (buys.length === 0) return;
+
+    let result = [...buys];
+
+    // Aplicar pesquisa
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(buy => 
+        String(buy.id).includes(term) ||
+        (buy.userName && buy.userName.toLowerCase().includes(term)) ||
+        (buy.userEmail && buy.userEmail.toLowerCase().includes(term)) ||
+        extractGamesFromItems(buy).some(game => 
+          game.name && game.name.toLowerCase().includes(term)
+        )
+      );
+    }
+
+    // Aplicar filtros
+    if (filters.userId) {
+      result = result.filter(buy => buy.user?.id === filters.userId || buy.comprador?.id === filters.userId);
+    }
+
+    if (filters.startDate) {
+      const startDate = new Date(filters.startDate);
+      result = result.filter(buy => buy.createdAt >= startDate);
+    }
+
+    if (filters.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999); // Fim do dia
+      result = result.filter(buy => buy.createdAt <= endDate);
+    }
+
+    if (filters.minTotal) {
+      result = result.filter(buy => buy.total >= Number(filters.minTotal));
+    }
+
+    if (filters.maxTotal) {
+      result = result.filter(buy => buy.total <= Number(filters.maxTotal));
+    }
+
+    setFilteredBuys(result);
+    updatePagination(result);
+  }, [buys, searchTerm, filters]);
+
+  // Manipuladores de eventos
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const handleFilterChange = (e) => {
@@ -218,7 +267,6 @@ function BuysAdmin() {
       ...prev,
       [name]: value
     }));
-    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const resetFilters = () => {
@@ -229,14 +277,29 @@ function BuysAdmin() {
       minTotal: '',
       maxTotal: ''
     });
+    setSearchTerm('');
   };
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, page: newPage }));
   };
 
+  // Funções auxiliares
   const formatCurrency = (value) => {
-    return `R$ ${value.toFixed(2)}`;
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const formatDate = (date) => {
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getStatusColor = (status) => {
@@ -263,6 +326,13 @@ function BuysAdmin() {
     return [];
   };
 
+  // Obter dados paginados
+  const getPaginatedData = () => {
+    const startIndex = (pagination.page - 1) * pagination.limit;
+    const endIndex = startIndex + pagination.limit;
+    return filteredBuys.slice(startIndex, endIndex);
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <Box sx={{ 
@@ -271,17 +341,32 @@ function BuysAdmin() {
         minHeight: '100vh',
         color: '#FFFFFF'
       }}>
+        {/* Cabeçalho com botão de voltar */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <Typography variant="h4" sx={{ 
-            color: '#AEEA00',
-            fontWeight: 'bold',
-            textShadow: '0px 0px 8px rgba(174, 234, 0, 0.3)'
-          }}>
-            Histórico de Compras
-          </Typography>
+          <Box display="flex" alignItems="center">
+            <IconButton 
+              onClick={() => navigate('/homeadmin')}
+              sx={{ 
+                color: '#AEEA00',
+                mr: 2,
+                '&:hover': {
+                  backgroundColor: 'rgba(174, 234, 0, 0.1)'
+                }
+              }}
+            >
+              <ArrowBack />
+            </IconButton>
+            <Typography variant="h4" sx={{ 
+              color: '#AEEA00',
+              fontWeight: 'bold',
+              textShadow: '0px 0px 8px rgba(174, 234, 0, 0.3)'
+            }}>
+              Histórico de Compras
+            </Typography>
+          </Box>
         </Box>
 
-        {/* Stats Cards - Now with 4 cards including last 7 days revenue */}
+        {/* Cartões de estatísticas */}
         <Grid container spacing={3} mb={4}>
           <Grid item xs={12} sm={6} lg={3}>
             <Card sx={{ 
@@ -361,7 +446,7 @@ function BuysAdmin() {
           </Grid>
         </Grid>
 
-        {/* Search and Filters */}
+        {/* Pesquisa e Filtros */}
         <Card sx={{ mb: 4, p: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.4)' }}>
           <CardContent>
             <Box mb={3}>
@@ -554,11 +639,12 @@ function BuysAdmin() {
           </CardContent>
         </Card>
 
+        {/* Tabela de resultados */}
         {loading ? (
           <Box display="flex" justifyContent="center" mt={8} mb={8}>
             <CircularProgress sx={{ color: '#AEEA00' }} size={60} thickness={4} />
           </Box>
-        ) : buys.length === 0 ? (
+        ) : filteredBuys.length === 0 ? (
           <Card sx={{ 
             textAlign: 'center', 
             py: 8,
@@ -601,7 +687,7 @@ function BuysAdmin() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {buys.map((buy) => {
+                  {getPaginatedData().map((buy) => {
                     const games = extractGamesFromItems(buy);
                     
                     return (
@@ -614,7 +700,7 @@ function BuysAdmin() {
                         <TableCell sx={{ color: '#AEEA00', fontWeight: 'medium' }}>
                           #{buy.id}
                         </TableCell>
-                        <TableCell>{buy.createdAt}</TableCell>
+                        <TableCell>{formatDate(buy.createdAt)}</TableCell>
                         <TableCell>
                           <Typography sx={{ display: 'flex', alignItems: 'center' }}>
                             <PersonOutline sx={{ mr: 1, color: '#40C4FF' }} />
@@ -695,6 +781,7 @@ function BuysAdmin() {
               </Table>
             </TableContainer>
 
+            {/* Paginação */}
             <Box mt={4} display="flex" justifyContent="center" alignItems="center">
               <Button
                 disabled={pagination.page === 1}
