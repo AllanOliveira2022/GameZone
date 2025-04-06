@@ -181,9 +181,6 @@ function PlatformsAdmin() {
                                             <Typography variant="h6" gutterBottom color="textPrimary">
                                                 {platform.name}
                                             </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {platform.description || 'Sem descrição'}
-                                            </Typography>
                                             <Box mt={2} display="flex" gap={1}>
                                                 <Button
                                                     variant="contained"
@@ -191,7 +188,7 @@ function PlatformsAdmin() {
                                                     startIcon={<Edit />}
                                                     onClick={() => handleEditPlatform(platform.id)}
                                                     size="small"
-                                                    sx={{ color: '#FFFFFF' }} // <- Nome "Editar" em branco
+                                                    sx={{ color: '#FFFFFF' }}
                                                 >
                                                     Editar
                                                 </Button>

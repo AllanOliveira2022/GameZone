@@ -90,15 +90,6 @@ function DevelopersAdmin() {
     });
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
-    const [openDialog, setOpenDialog] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '',
-        cnpj: '',
-        description: '',
-    });
-    const [errors, setErrors] = useState({
-        name: false,
-    });
 
     useEffect(() => {
         fetchDevelopers();
@@ -138,40 +129,7 @@ function DevelopersAdmin() {
     };
 
     const handleOpenAddDialog = () => {
-        setFormData({ name: '', cnpj: '', description: '' });
-        setErrors({ name: false });
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
-
-    const handleSaveDeveloper = async () => {
-        if (!formData.name.trim()) {
-            setErrors({ name: true });
-            return;
-        }
-
-        try {
-            await DeveloperService.createDeveloper(formData);
-            setOpenDialog(false);
-            fetchDevelopers();
-        } catch (error) {
-            console.error('Failed to save developer:', error);
-        }
-    };
-
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-
-        if (name === 'name' && errors.name) {
-            setErrors({ name: false });
-        }
+      navigate('/createdeveloper');
     };
 
     const handleSearch = (e) => {
@@ -323,77 +281,6 @@ function DevelopersAdmin() {
                         </Box>
                     </>
                 )}
-
-                {/* Modal para adicionar nova desenvolvedora */}
-                <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                    <DialogTitle color="primary">Adicionar Desenvolvedora</DialogTitle>
-                    <DialogContent>
-                        <Box component="form" sx={{ mt: 2 }}>
-                            <FormControl fullWidth error={errors.name} sx={{ mb: 3 }}>
-                                <TextField
-                                    fullWidth
-                                    label="Nome da Desenvolvedora"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleFormChange}
-                                    required
-                                    error={errors.name}
-                                    variant="outlined"
-                                    InputProps={{
-                                        style: { color: darkTheme.palette.text.primary },
-                                    }}
-                                    InputLabelProps={{
-                                        style: { color: darkTheme.palette.text.secondary },
-                                    }}
-                                />
-                                {errors.name && (
-                                    <FormHelperText error>O nome da desenvolvedora é obrigatório</FormHelperText>
-                                )}
-                            </FormControl>
-
-                            <TextField
-                                fullWidth
-                                label="CNPJ (Opcional)"
-                                name="cnpj"
-                                value={formData.cnpj}
-                                onChange={handleFormChange}
-                                variant="outlined"
-                                sx={{ mb: 3 }}
-                                InputProps={{
-                                    style: { color: darkTheme.palette.text.primary },
-                                }}
-                                InputLabelProps={{
-                                    style: { color: darkTheme.palette.text.secondary },
-                                }}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Descrição (Opcional)"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleFormChange}
-                                multiline
-                                rows={4}
-                                variant="outlined"
-                                InputProps={{
-                                    style: { color: darkTheme.palette.text.primary },
-                                }}
-                                InputLabelProps={{
-                                    style: { color: darkTheme.palette.text.secondary },
-                                }}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseDialog} color="secondary">
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleSaveDeveloper} color="primary">
-                            Salvar
-                        </Button>
-                    </DialogActions>
-                </Dialog>
             </Box>
         </ThemeProvider>
     );
