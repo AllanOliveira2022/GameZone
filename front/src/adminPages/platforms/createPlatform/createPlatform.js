@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlatformService } from '../../../services/platformService';
-import { TextField, Button, Box, CircularProgress, Alert } from '@mui/material';
+import {
+  TextField, Button, Box, CircularProgress, Alert, IconButton
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 function CreatePlatform() {
   const navigate = useNavigate();
@@ -63,8 +66,26 @@ function CreatePlatform() {
       padding: 3,
       backgroundColor: '#101010',
       minHeight: '100vh',
-      color: '#e7ffea'
+      color: '#e7ffea',
+      position: 'relative'
     }}>
+      {/* Botão de Voltar */}
+      <IconButton
+        onClick={() => navigate('/platformsAdmin')}
+        sx={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          color: '#26ff00',
+          '&:hover': {
+            color: '#32e514',
+            backgroundColor: '#1a1a1a'
+          }
+        }}
+      >
+        <ArrowBackIcon fontSize="large" />
+      </IconButton>
+
       <h2 style={{
         color: '#26ff00',
         textAlign: 'center',

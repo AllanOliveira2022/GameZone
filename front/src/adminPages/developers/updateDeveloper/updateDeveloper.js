@@ -31,7 +31,7 @@ function UpdateDeveloper() {
         const response = await DeveloperService.getDeveloperById(id);
         setDeveloperData({
           name: response.data.name || '',
-          cnpj: response.data.cnpj || '',
+          CNPJ: response.data.CNPJ || '',
           email: response.data.email || '',
           phone: response.data.phone || ''
         });

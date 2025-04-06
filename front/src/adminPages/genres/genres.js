@@ -13,13 +13,6 @@ import {
     IconButton,
     ThemeProvider,
     createTheme,
-    alpha,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    FormControl,
-    FormHelperText,
     InputAdornment,
 } from '@mui/material';
 import { Add, Search, Clear, ArrowBack, Edit, DeleteOutline } from '@mui/icons-material';
@@ -91,14 +84,6 @@ function GenresAdmin() {
         limit: 12,
         total: 0,
     });
-    const [openDialog, setOpenDialog] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-    });
-    const [errors, setErrors] = useState({
-        name: false,
-    });
 
     useEffect(() => {
         fetchGenres();
@@ -123,43 +108,6 @@ function GenresAdmin() {
             console.error('Failed to fetch genres:', error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleOpenAddDialog = () => {
-        setFormData({ name: '', description: '' });
-        setErrors({ name: false });
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
-
-    const handleSaveGenre = async () => {
-        if (!formData.name.trim()) {
-            setErrors({ name: true });
-            return;
-        }
-
-        try {
-            await GenreService.createGenre(formData);
-            setOpenDialog(false);
-            fetchGenres();
-        } catch (error) {
-            console.error('Failed to save genre:', error);
-        }
-    };
-
-    const handleFormChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-
-        if (name === 'name' && errors.name) {
-            setErrors({ name: false });
         }
     };
 
@@ -190,7 +138,7 @@ function GenresAdmin() {
                         variant="contained"
                         color="primary"
                         startIcon={<Add />}
-                        onClick={handleOpenAddDialog}
+                        onClick={() => navigate('/creategenre')}
                     >
                         Adicionar Gênero
                     </Button>
@@ -258,9 +206,6 @@ function GenresAdmin() {
                                             <Typography gutterBottom variant="subtitle1" component="h3" noWrap>
                                                 {genre.name}
                                             </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {genre.description || 'Sem descrição'}
-                                            </Typography>
                                         </CardContent>
                                         <Box sx={{ p: 1, display: 'flex', gap: 1 }}>
                                             <Button
@@ -313,61 +258,6 @@ function GenresAdmin() {
                         </Box>
                     </>
                 )}
-
-                {/* Modal para adicionar novo gênero */}
-                <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                    <DialogTitle color="primary">Adicionar Gênero</DialogTitle>
-                    <DialogContent>
-                        <Box component="form" sx={{ mt: 2 }}>
-                            <FormControl fullWidth error={errors.name} sx={{ mb: 3 }}>
-                                <TextField
-                                    fullWidth
-                                    label="Nome do Gênero"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleFormChange}
-                                    required
-                                    error={errors.name}
-                                    variant="outlined"
-                                    InputProps={{
-                                        style: { color: darkTheme.palette.text.primary },
-                                    }}
-                                    InputLabelProps={{
-                                        style: { color: darkTheme.palette.text.secondary },
-                                    }}
-                                />
-                                {errors.name && (
-                                    <FormHelperText error>O nome do gênero é obrigatório</FormHelperText>
-                                )}
-                            </FormControl>
-
-                            <TextField
-                                fullWidth
-                                label="Descrição"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleFormChange}
-                                multiline
-                                rows={4}
-                                variant="outlined"
-                                InputProps={{
-                                    style: { color: darkTheme.palette.text.primary },
-                                }}
-                                InputLabelProps={{
-                                    style: { color: darkTheme.palette.text.secondary },
-                                }}
-                            />
-                        </Box>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseDialog} color="secondary">
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleSaveGenre} color="primary">
-                            Salvar
-                        </Button>
-                    </DialogActions>
-                </Dialog>
             </Box>
         </ThemeProvider>
     );

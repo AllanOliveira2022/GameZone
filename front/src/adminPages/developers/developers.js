@@ -14,12 +14,6 @@ import {
     createTheme,
     TextField,
     InputAdornment,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    FormControl,
-    FormHelperText,
 } from '@mui/material';
 import { Add, Edit, DeleteOutline, ArrowBack, Search, Clear } from '@mui/icons-material';
 
@@ -80,16 +74,24 @@ const darkTheme = createTheme({
     },
 });
 
+// Função para formatar CNPJ
+const formatCNPJ = (cnpj) => {
+    if (!cnpj) return 'Não informado';
+    return cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+};
+
+// Função para formatar telefone
+const formatPhone = (phone) => {
+    if (!phone) return 'Não informado';
+    return phone.replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3');
+};
+
 function DevelopersAdmin() {
     const [developers, setDevelopers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [pagination, setPagination] = useState({
-        page: 1,
-        limit: 12,
-        total: 0,
-    });
-    const navigate = useNavigate();
+    const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0 });
     const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchDevelopers();
@@ -129,12 +131,12 @@ function DevelopersAdmin() {
     };
 
     const handleOpenAddDialog = () => {
-      navigate('/createdeveloper');
+        navigate('/createdeveloper');
     };
 
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
-        setPagination((prev) => ({ ...prev, page: 1 }));
+        setPagination(prev => ({ ...prev, page: 1 }));
     };
 
     const handleResetSearch = () => {
@@ -151,17 +153,11 @@ function DevelopersAdmin() {
                     <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
                         Gerenciamento de Desenvolvedoras
                     </Typography>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<Add />}
-                        onClick={handleOpenAddDialog}
-                    >
+                    <Button variant="contained" color="primary" startIcon={<Add />} onClick={handleOpenAddDialog}>
                         Adicionar Desenvolvedora
                     </Button>
                 </Box>
 
-                {/* Barra de pesquisa */}
                 <Box mb={3}>
                     <TextField
                         variant="outlined"
@@ -220,14 +216,17 @@ function DevelopersAdmin() {
                                 <Grid item xs={12} sm={6} md={4} lg={3} key={developer.id}>
                                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: darkTheme.palette.background.paper, color: darkTheme.palette.text.primary }}>
                                         <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                                            <Typography gutterBottom variant="subtitle1" component="h3" noWrap>
+                                            <Typography gutterBottom variant="subtitle1" component="h3" noWrap sx={{ color: darkTheme.palette.primary.main, fontWeight: 600 }}>
                                                 {developer.name}
                                             </Typography>
                                             <Typography variant="body2" color="textSecondary" gutterBottom>
-                                                CNPJ: {developer.cnpj || 'Não informado'}
+                                                CNPJ: {formatCNPJ(developer.CNPJ)}
                                             </Typography>
-                                            <Typography variant="body2" color="textSecondary">
-                                                {developer.description || 'Sem descrição'}
+                                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                                Telefone: {formatPhone(developer.phone)}
+                                            </Typography>
+                                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                                Email: {developer.email || 'Não informado'}
                                             </Typography>
                                         </CardContent>
                                         <Box sx={{ p: 1, display: 'flex', gap: 1 }}>

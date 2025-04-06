@@ -109,9 +109,9 @@ function DeleteDeveloper() {
 
                 <Box sx={{ backgroundColor: '#2A2A2A', p: 2, borderRadius: 2, mb: 2 }}>
                   <Typography variant="subtitle1">{developer.name}</Typography>
-                  {developer.cnpj && (
+                  {developer.CNPJ && (
                     <Typography variant="body2" color="text.secondary" mt={1}>
-                      CNPJ: {developer.cnpj}
+                      CNPJ: {developer.CNPJ}
                     </Typography>
                   )}
                   {developer.email && (
@@ -131,7 +131,7 @@ function DeleteDeveloper() {
                 </Alert>
 
                 <Box display="flex" justifyContent="flex-end" gap={2}>
-                  <Button variant="outlined" onClick={() => navigate('/developers')} disabled={isDeleting}>
+                  <Button variant="outlined" onClick={() => navigate('/developersadmin')} disabled={isDeleting}>
                     Cancelar
                   </Button>
                   <Button

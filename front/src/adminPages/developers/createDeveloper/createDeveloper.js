@@ -9,7 +9,7 @@ import {
   Alert,
   Paper
 } from '@mui/material';
-import api from '../../../api/api';
+import DeveloperService from '../../../services/developerService'; // ajuste o caminho conforme sua estrutura
 
 function CreateDeveloper() {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ function CreateDeveloper() {
     setIsSubmitting(true);
 
     try {
-      await api.createDeveloper(developerData);
+      await DeveloperService.createDeveloper(developerData);
       setSuccess('Desenvolvedor cadastrado com sucesso!');
       setDeveloperData({ name: '', CNPJ: '', email: '', phone: '' });
       setTimeout(() => navigate('/developersAdmin'), 1500);
@@ -48,7 +48,7 @@ function CreateDeveloper() {
     }
   };
 
-  const handleCancel = () => navigate('/developers');
+  const handleCancel = () => navigate('/developersadmin');
 
   return (
     <Box maxWidth={500} mx="auto" mt={6} px={2}>

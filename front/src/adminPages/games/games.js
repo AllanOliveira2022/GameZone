@@ -16,12 +16,12 @@ import {
     FormControl,
     CardMedia,
     Chip,
-    MenuItem,
     InputAdornment,
     IconButton,
     ThemeProvider,
     createTheme,
-    alpha
+    alpha,
+    MenuItem
 } from '@mui/material';
 import { Add, Search, Clear, ArrowBack, Edit, DeleteOutline } from '@mui/icons-material';
 
@@ -64,16 +64,6 @@ const darkTheme = createTheme({
                 },
             },
         },
-        MuiSelect: {
-            styleOverrides: {
-                root: {
-                    color: '#FFFFFF',
-                },
-                icon: {
-                    color: '#FFFFFF',
-                },
-            },
-        },
         MuiOutlinedInput: {
             styleOverrides: {
                 notchedOutline: {
@@ -89,17 +79,11 @@ const darkTheme = createTheme({
                 },
             },
         },
-        MuiMenuItem: {
-            styleOverrides: {
-                root: {
-                    '&:hover': {
-                        backgroundColor: alpha('#AEEA00', 0.1),
-                    },
-                },
-            },
-        },
     },
 });
+
+// Definindo uma cor verde mais escura para melhor legibilidade
+const darkGreen = '#558B2F';
 
 function GamesAdmin() {
     const navigate = useNavigate();
@@ -153,6 +137,7 @@ function GamesAdmin() {
                 };
 
                 const response = await GameService.getGames(params);
+                console.log('API response:', response.data); // Debug log
 
                 const gamesWithNumericPrice = response.data.map((game) => ({
                     ...game,
@@ -402,17 +387,74 @@ function GamesAdmin() {
                                             </Typography>
 
                                             <Box sx={{ display: 'flex', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
-                                                {game.genre && (
-                                                    <Chip label={game.genre.name} size="small" sx={{ mb: 0.5, color: darkTheme.palette.text.primary, backgroundColor: alpha(darkTheme.palette.primary.main, 0.3) }} />
+                                                {/* Chips de informações maiores e com cores mais escuras */}
+                                                {(game.Genre || game.genre) && (
+                                                    <Chip 
+                                                        label={`Gênero: ${game.Genre?.name || game.genre?.name || 'N/A'}`} 
+                                                        size="medium"  // Aumentado de small para medium
+                                                        sx={{ 
+                                                            mb: 0.5, 
+                                                            color: '#000', 
+                                                            backgroundColor: darkGreen,
+                                                            fontWeight: 'bold',
+                                                            fontSize: '0.85rem'  // Texto maior
+                                                        }} 
+                                                    />
                                                 )}
-                                                {game.platform && (
-                                                    <Chip label={game.platform.name} size="small" variant="outlined" sx={{ mb: 0.5, borderColor: darkTheme.palette.secondary.main, color: darkTheme.palette.text.primary }} />
+                                                
+                                                {(game.Platform || game.platform) && (
+                                                    <Chip 
+                                                        label={`Plataforma: ${game.Platform?.name || game.platform?.name || 'N/A'}`} 
+                                                        size="medium"  // Aumentado de small para medium
+                                                        sx={{ 
+                                                            mb: 0.5, 
+                                                            color: '#000', 
+                                                            backgroundColor: darkGreen,
+                                                            fontWeight: 'bold',
+                                                            fontSize: '0.85rem'  // Texto maior 
+                                                        }} 
+                                                    />
+                                                )}
+                                                
+                                                {(game.Developer || game.developer) && (
+                                                    <Chip 
+                                                        label={`Desenvolvedor: ${game.Developer?.name || game.developer?.name || 'N/A'}`} 
+                                                        size="medium"  // Aumentado de small para medium
+                                                        sx={{ 
+                                                            mb: 0.5, 
+                                                            color: '#000', 
+                                                            backgroundColor: darkGreen,
+                                                            fontWeight: 'bold',
+                                                            fontSize: '0.85rem'  // Texto maior
+                                                        }} 
+                                                    />
                                                 )}
                                             </Box>
 
-                                            <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
-                                                R$ {game.price.toFixed(2)}
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1, height: 60, overflow: 'hidden' }}>
+                                                {game.description && game.description.length > 40 ? `${game.description.substring(0, 40)}...` : game.description}
                                             </Typography>
+
+                                            {/* Preço com fundo destacado */}
+                                            <Box 
+                                                sx={{ 
+                                                    backgroundColor: alpha(darkTheme.palette.primary.main, 0.1),
+                                                    padding: '8px',
+                                                    borderRadius: '4px',
+                                                    display: 'inline-block'
+                                                }}
+                                            >
+                                                <Typography 
+                                                    variant="subtitle1" 
+                                                    color="primary" 
+                                                    sx={{ 
+                                                        fontWeight: 'bold',
+                                                        fontSize: '1.1rem'
+                                                    }}
+                                                >
+                                                    R$ {game.price.toFixed(2)}
+                                                </Typography>
+                                            </Box>
                                         </CardContent>
                                         <Box sx={{ p: 1, display: 'flex', gap: 1 }}>
                                             <Button

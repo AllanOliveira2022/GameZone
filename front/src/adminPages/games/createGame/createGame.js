@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, MenuItem, Select, InputLabel, FormControl, CircularProgress, Alert } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Box,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+  Alert,
+  IconButton
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { GameService } from '../../../services/gameService';
 import { GenreService } from '../../../services/genreService';
 import { PlatformService } from '../../../services/platformService';
 import { DeveloperService } from '../../../services/developerService';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 function CreateGame() {
   const [formData, setFormData] = useState({
@@ -64,13 +76,13 @@ function CreateGame() {
     setLoading(true);
     setError('');
     setSuccessMessage('');
-  
+
     try {
       const response = await GameService.createGame(formData);
-      
+
       if (response.success) {
         setSuccessMessage(response.message);
-        
+
         // Verifica se o game e id existem antes de navegar
         if (response.game && response.game.id) {
           setTimeout(() => {
@@ -91,22 +103,44 @@ function CreateGame() {
     }
   };
 
+  const handleCancel = () => {
+    navigate('/gamesAdmin');
+  };
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       padding: 3,
       backgroundColor: '#101010',
       minHeight: '100vh',
-      color: '#e7ffea'
+      color: '#e7ffea',
+      position: 'relative' // Adicionado para posicionar o IconButton
     }}>
-      <h2 style={{ 
+      {/* Botão de Voltar */}
+      <IconButton
+        onClick={handleCancel}
+        sx={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          color: '#26ff00',
+          '&:hover': {
+            color: '#32e514',
+            backgroundColor: '#1a1a1a'
+          }
+        }}
+      >
+        <ArrowBackIcon fontSize="large" />
+      </IconButton>
+
+      <h2 style={{
         color: '#26ff00',
         textAlign: 'center',
         marginBottom: '2rem',
         textShadow: '0 0 5px #26ff00'
       }}>Criar Jogo</h2>
-      
+
       {successMessage && (
-        <Alert severity="success" sx={{ 
+        <Alert severity="success" sx={{
           backgroundColor: '#1a1a1a',
           color: '#e7ffea',
           border: '1px solid #26ff00',
@@ -115,9 +149,9 @@ function CreateGame() {
           {successMessage}
         </Alert>
       )}
-      
+
       {error && (
-        <Alert severity="error" sx={{ 
+        <Alert severity="error" sx={{
           backgroundColor: '#1a1a1a',
           color: '#e7ffea',
           border: '1px solid #ff3e3e',
@@ -140,13 +174,13 @@ function CreateGame() {
           sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                  borderColor: '#32e514',
+                borderColor: '#32e514',
               },
               '&:hover fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               '&.Mui-focused fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               color: '#e7ffea',
             },
@@ -158,7 +192,7 @@ function CreateGame() {
             }
           }}
         />
-        
+
         <TextField
           label="Descrição"
           variant="outlined"
@@ -173,13 +207,13 @@ function CreateGame() {
           sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                  borderColor: '#32e514',
+                borderColor: '#32e514',
               },
               '&:hover fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               '&.Mui-focused fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               color: '#e7ffea',
             },
@@ -191,7 +225,7 @@ function CreateGame() {
             }
           }}
         />
-        
+
         <TextField
           label="Preço"
           variant="outlined"
@@ -205,13 +239,13 @@ function CreateGame() {
           sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                  borderColor: '#32e514',
+                borderColor: '#32e514',
               },
               '&:hover fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               '&.Mui-focused fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               color: '#e7ffea',
             },
@@ -223,17 +257,17 @@ function CreateGame() {
             }
           }}
         />
-        
+
         <FormControl fullWidth margin="normal" required sx={{
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-                borderColor: '#32e514',
+              borderColor: '#32e514',
             },
             '&:hover fieldset': {
-                borderColor: '#26ff00',
+              borderColor: '#26ff00',
             },
             '&.Mui-focused fieldset': {
-                borderColor: '#26ff00',
+              borderColor: '#26ff00',
             },
             color: '#e7ffea',
           },
@@ -253,8 +287,8 @@ function CreateGame() {
             disabled={optionsLoading}
           >
             {genres.map((genre) => (
-              <MenuItem 
-                key={genre.id} 
+              <MenuItem
+                key={genre.id}
                 value={genre.id}
                 sx={{
                   backgroundColor: '#1a1a1a',
@@ -277,13 +311,13 @@ function CreateGame() {
         <FormControl fullWidth margin="normal" required sx={{
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-                borderColor: '#32e514',
+              borderColor: '#32e514',
             },
             '&:hover fieldset': {
-                borderColor: '#26ff00',
+              borderColor: '#26ff00',
             },
             '&.Mui-focused fieldset': {
-                borderColor: '#26ff00',
+              borderColor: '#26ff00',
             },
             color: '#e7ffea',
           },
@@ -303,8 +337,8 @@ function CreateGame() {
             disabled={optionsLoading}
           >
             {platforms.map((platform) => (
-              <MenuItem 
-                key={platform.id} 
+              <MenuItem
+                key={platform.id}
                 value={platform.id}
                 sx={{
                   backgroundColor: '#1a1a1a',
@@ -327,13 +361,13 @@ function CreateGame() {
         <FormControl fullWidth margin="normal" required sx={{
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-                borderColor: '#32e514',
+              borderColor: '#32e514',
             },
             '&:hover fieldset': {
-                borderColor: '#26ff00',
+              borderColor: '#26ff00',
             },
             '&.Mui-focused fieldset': {
-                borderColor: '#26ff00',
+              borderColor: '#26ff00',
             },
             color: '#e7ffea',
           },
@@ -353,8 +387,8 @@ function CreateGame() {
             disabled={optionsLoading}
           >
             {developers.map((developer) => (
-              <MenuItem 
-                key={developer.id} 
+              <MenuItem
+                key={developer.id}
                 value={developer.id}
                 sx={{
                   backgroundColor: '#1a1a1a',
@@ -390,13 +424,13 @@ function CreateGame() {
           sx={{
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                  borderColor: '#32e514',
+                borderColor: '#32e514',
               },
               '&:hover fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               '&.Mui-focused fieldset': {
-                  borderColor: '#26ff00',
+                borderColor: '#26ff00',
               },
               color: '#e7ffea',
             },
@@ -409,26 +443,45 @@ function CreateGame() {
           }}
         />
 
-        <Button 
-          type="submit" 
-          variant="contained" 
-          fullWidth 
-          sx={{ 
-            mt: 2,
-            backgroundColor: '#1fcc00',
-            color: '#101010',
-            fontWeight: 'bold',
-            '&:hover': {
-              backgroundColor: '#26ff00',
-              boxShadow: '0 0 10px #26ff00'
-            },
-            padding: '12px 0',
-            fontSize: '1rem'
-          }} 
-          disabled={loading || optionsLoading}
-        >
-          {loading ? <CircularProgress size={24} sx={{ color: '#101010' }} /> : 'Criar Jogo'}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+          <Button
+            onClick={handleCancel}
+            variant="outlined"
+            fullWidth
+            sx={{
+              color: '#e7ffea',
+              borderColor: '#ff3e3e',
+              '&:hover': {
+                borderColor: '#ff7961',
+                backgroundColor: 'rgba(255, 62, 62, 0.08)'
+              },
+              padding: '12px 0',
+              fontSize: '1rem'
+            }}
+            disabled={loading || optionsLoading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{
+              backgroundColor: '#1fcc00',
+              color: '#101010',
+              fontWeight: 'bold',
+              '&:hover': {
+                backgroundColor: '#26ff00',
+                boxShadow: '0 0 10px #26ff00'
+              },
+              padding: '12px 0',
+              fontSize: '1rem'
+            }}
+            disabled={loading || optionsLoading}
+          >
+            {loading ? <CircularProgress size={24} sx={{ color: '#101010' }} /> : 'Criar Jogo'}
+          </Button>
+        </Box>
       </form>
     </Box>
   );
