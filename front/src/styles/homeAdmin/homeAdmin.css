@@ -1,0 +1,73 @@
+/* Adicionando as variáveis de cor no início do seu arquivo CSS */
+:root {
+    --primary-color: #26ff00; /* Verde neon principal */
+    --secondary-color: #32e514;
+    --accent-color: #1fcc00;
+    --background-color: #101010; /* Fundo escuro */
+    --background-color2: #1a1a1a;
+    --background-color3: #272727;
+    --text-color: #e7ffea; /* Texto claro */
+  }
+  
+  /* Garantir que o fundo da página use o background da paleta */
+  body {
+    background-color: var(--background-color); /* Usando a cor de fundo personalizada */
+    color: var(--text-color); /* Cor do texto com base na paleta */
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Estilo do painel administrativo */
+  .home-admin-container {
+    background-color: var(--background-color2); /* Cor do fundo do painel */
+    min-height: 100vh;
+    padding: 32px;
+  }
+  
+  /* Seção com fundo escuro */
+  .section {
+    background-color: var(--background-color3); /* Usando o terceiro tom de fundo */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+  }
+  
+  /* Estilizando o cabeçalho das seções */
+  .section-header {
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+    background-color: var(--primary-color); /* Verde neon */
+  }
+  
+  /* Cards dentro das seções */
+  .card {
+    background-color: var(--background-color3); /* Fundo mais suave para os cards */
+    border-radius: 8px;
+    padding: 16px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.05); /* Efeito de zoom */
+    background-color: var(--background-color2); /* Mudar para o fundo mais escuro */
+  }
+  
+  .card-title {
+    color: var(--text-color); /* Cor do título do card */
+  }
+  
+  .card-description {
+    color: var(--text-color); /* Cor do texto */
+  }
+  
+  /* Estilo dos links no painel */
+  .link {
+    color: var(--text-color);
+    text-decoration: none;
+  }
+  
+  .link:hover {
+    text-decoration: underline;
+  }
+  
