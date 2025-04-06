@@ -1,35 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../../api/api';
-import DeveloperService from '../../../services/developerService'; // ✅ Importando o service
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+  Alert,
+  Paper
+} from '@mui/material';
+import DeveloperService from '../../../services/developerService';
 
 function UpdateDeveloper() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [developerData, setDeveloperData] = useState({
     name: '',
     cnpj: '',
     email: '',
     phone: ''
   });
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     const fetchDeveloper = async () => {
       try {
-        const response = await api.get(`/developers/${id}`);
+        const response = await DeveloperService.getDeveloperById(id);
         setDeveloperData({
           name: response.data.name || '',
           cnpj: response.data.cnpj || '',
           email: response.data.email || '',
           phone: response.data.phone || ''
         });
-        setLoading(false);
       } catch (err) {
-        setError('Erro ao carregar dados do desenvolvedor');
+        setError('Erro ao carregar dados do desenvolvedor.');
         console.error(err);
+      } finally {
         setLoading(false);
       }
     };
@@ -39,146 +48,131 @@ function UpdateDeveloper() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDeveloperData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setDeveloperData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setIsSubmitting(true);
 
     if (!developerData.name.trim()) {
       setError('O nome do desenvolvedor é obrigatório');
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      await DeveloperService.updateDeveloper(id, developerData); // ✅ Usando o service
+      await DeveloperService.updateDeveloper(id, developerData);
       setSuccess('Desenvolvedor atualizado com sucesso!');
       setTimeout(() => navigate('/developersAdmin'), 1500);
     } catch (err) {
-      if (err.response) {
-        if (err.response.status === 404) {
-          setError('Desenvolvedor não encontrado');
-        } else if (err.response.status === 400) {
-          setError('Dados inválidos. Verifique as informações.');
-        } else {
-          setError('Erro ao atualizar o desenvolvedor. Tente novamente.');
-        }
+      if (err.response?.status === 404) {
+        setError('Desenvolvedor não encontrado');
+      } else if (err.response?.status === 400) {
+        setError('Dados inválidos. Verifique as informações.');
       } else {
-        setError('Erro de conexão. Verifique sua internet.');
+        setError('Erro ao atualizar desenvolvedor. Tente novamente.');
       }
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/developersAdmin');
-  };
+  const handleCancel = () => navigate('/developersAdmin');
 
-  if (loading) return <div className="text-center py-8">Carregando...</div>;
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <h1 className="text-2xl font-bold mb-6">Editar Desenvolvedor</h1>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        {/* Campos do formulário mantidos como antes */}
-        {/* ... */}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-            Nome da Empresa *
-          </label>
-          <input
-            type="text"
-            id="name"
+    <Box maxWidth={500} mx="auto" mt={6} px={2}>
+      <Typography variant="h4" color="white" gutterBottom>
+        Editar Desenvolvedor
+      </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+      <Paper elevation={3} sx={{ p: 4, backgroundColor: '#1e1e1e', borderRadius: 4 }}>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Nome da Empresa *"
             name="name"
             value={developerData.name}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="Ex: Rockstar Games, Ubisoft, EA"
+            fullWidth
             required
             autoFocus
+            margin="normal"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cnpj">
-            CNPJ
-          </label>
-          <input
-            type="text"
-            id="cnpj"
+          <TextField
+            label="CNPJ"
             name="cnpj"
             value={developerData.cnpj}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            fullWidth
+            margin="normal"
             placeholder="00.000.000/0000-00"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
+          <TextField
+            label="Email"
             name="email"
+            type="email"
             value={developerData.email}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            fullWidth
+            margin="normal"
             placeholder="contato@empresa.com"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
-            Telefone
-          </label>
-          <input
-            type="tel"
-            id="phone"
+          <TextField
+            label="Telefone"
             name="phone"
+            type="tel"
             value={developerData.phone}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            fullWidth
+            margin="normal"
             placeholder="(00) 00000-0000"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
 
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Atualizar Desenvolvedor
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+          <Box mt={4} display="flex" justifyContent="space-between">
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              sx={{ borderRadius: 2 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={isSubmitting}
+              sx={{ borderRadius: 2, minWidth: 160 }}
+            >
+              {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Atualizar'}
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Box>
   );
 }
 

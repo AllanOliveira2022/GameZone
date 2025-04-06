@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../../api/api'; // ajuste o caminho conforme sua estrutura
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+  Alert,
+  Paper
+} from '@mui/material';
+import api from '../../../api/api';
 
 function CreateDeveloper() {
   const navigate = useNavigate();
@@ -16,10 +25,7 @@ function CreateDeveloper() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDeveloperData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setDeveloperData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -29,130 +35,106 @@ function CreateDeveloper() {
     setIsSubmitting(true);
 
     try {
-      const response = await api.createDeveloper(developerData);
+      await api.createDeveloper(developerData);
       setSuccess('Desenvolvedor cadastrado com sucesso!');
-      setDeveloperData({ name: '', CNPJ: '', email: '', phone: '' }); // Limpa o formulário
-      
-      // Opcional: redirecionar após sucesso
+      setDeveloperData({ name: '', CNPJ: '', email: '', phone: '' });
       setTimeout(() => navigate('/developersAdmin'), 1500);
     } catch (err) {
-      if (err.response && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError('Erro ao cadastrar desenvolvedor. Verifique os dados e tente novamente.');
-      }
+      const msg = err.response?.data?.message || 'Erro ao cadastrar desenvolvedor.';
+      setError(msg);
       console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate('/developers');
-  };
+  const handleCancel = () => navigate('/developers');
 
   return (
-    <div className="container mx-auto p-4 max-w-md">
-      <h1 className="text-2xl font-bold mb-6">Cadastrar Novo Desenvolvedor</h1>
-      
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-            Nome da Empresa *
-          </label>
-          <input
-            type="text"
-            id="name"
+    <Box maxWidth={500} mx="auto" mt={6} px={2}>
+      <Typography variant="h4" color="white" gutterBottom>
+        Novo Desenvolvedor
+      </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+      <Paper elevation={3} sx={{ p: 4, backgroundColor: '#1e1e1e', borderRadius: 4 }}>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Nome da Empresa"
             name="name"
             value={developerData.name}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="Ex: Rockstar Games, Ubisoft, EA"
+            fullWidth
             required
             autoFocus
+            margin="normal"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="CNPJ">
-            CNPJ *
-          </label>
-          <input
-            type="text"
-            id="CNPJ"
+          <TextField
+            label="CNPJ"
             name="CNPJ"
             value={developerData.CNPJ}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="00.000.000/0000-00"
+            fullWidth
             required
+            margin="normal"
+            placeholder="00.000.000/0000-00"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Email *
-          </label>
-          <input
-            type="email"
-            id="email"
+          <TextField
+            label="Email"
             name="email"
+            type="email"
             value={developerData.email}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="contato@empresa.com"
+            fullWidth
             required
+            margin="normal"
+            placeholder="contato@empresa.com"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phone">
-            Telefone *
-          </label>
-          <input
-            type="tel"
-            id="phone"
+          <TextField
+            label="Telefone"
             name="phone"
+            type="tel"
             value={developerData.phone}
             onChange={handleChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            placeholder="(00) 00000-0000"
+            fullWidth
             required
+            margin="normal"
+            placeholder="(00) 00000-0000"
+            InputLabelProps={{ style: { color: '#ccc' } }}
+            InputProps={{ style: { color: '#fff' } }}
           />
-        </div>
 
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`${
-              isSubmitting ? 'bg-blue-400' : 'bg-blue-500 hover:bg-blue-700'
-            } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
-          >
-            {isSubmitting ? 'Cadastrando...' : 'Cadastrar Desenvolvedor'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
-    </div>
+          <Box mt={4} display="flex" justifyContent="space-between">
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              sx={{ borderRadius: 2 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={isSubmitting}
+              sx={{ borderRadius: 2, minWidth: 160 }}
+            >
+              {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Cadastrar'}
+            </Button>
+          </Box>
+        </form>
+      </Paper>
+    </Box>
   );
 }
 
