@@ -10,9 +10,11 @@ import {
   Button,
   Paper,
   useMediaQuery,
-  Container
+  Container,
+  Stack
 } from "@mui/material";
 import LogoutIcon from '@mui/icons-material/Logout';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import { createTheme } from "@mui/material/styles";
 import GameCard from "../../components/gameCard/gameCard";
 import Menu from "../../components/menu/menu";
@@ -217,6 +219,10 @@ function Home() {
     navigate('/');
   };
 
+  const goToLibrary = () => {
+    navigate('/library');
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Menu onFilter={handleFilter} />
@@ -240,7 +246,7 @@ function Home() {
             px: { xs: 1, sm: 2, md: 3 }
           }}
         >
-          {/* Cabeçalho com mensagem de boas-vindas e botão de logout - Responsivo */}
+          {/* Cabeçalho com mensagem de boas-vindas e botões - Responsivo */}
           <Paper
             elevation={3}
             sx={{
@@ -278,21 +284,41 @@ function Home() {
               </Typography>
             </Box>
             
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
-              fullWidth={isMobile}
-              size={isMobile ? "small" : "medium"}
-              sx={{
-                mt: { xs: 1, sm: 0 },
-                minWidth: { xs: '100%', sm: '120px' },
-                height: { xs: '40px', sm: 'auto' }
-              }}
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={{ xs: 1, sm: 2 }}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
-              {isMobile ? "Sair" : "Sair do Sistema"}
-            </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<LibraryBooksIcon />}
+                onClick={goToLibrary}
+                fullWidth={isMobile}
+                size={isMobile ? "small" : "medium"}
+                sx={{
+                  minWidth: { xs: '100%', sm: '150px' },
+                  height: { xs: '40px', sm: 'auto' }
+                }}
+              >
+                Minha Biblioteca
+              </Button>
+              
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                fullWidth={isMobile}
+                size={isMobile ? "small" : "medium"}
+                sx={{
+                  minWidth: { xs: '100%', sm: '120px' },
+                  height: { xs: '40px', sm: 'auto' }
+                }}
+              >
+                {isMobile ? "Sair" : "Sair do Sistema"}
+              </Button>
+            </Stack>
           </Paper>
 
           {/* Estado de loading */}

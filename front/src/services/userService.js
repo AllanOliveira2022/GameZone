@@ -32,9 +32,7 @@ const UserService = {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('id');
-    // Você pode adicionar mais itens conforme o que estiver armazenando
   },
-  
 
   getUsers: async () => {
     try {
@@ -42,6 +40,16 @@ const UserService = {
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Erro ao listar usuários' };
+    }
+  },
+
+  // NOVA FUNÇÃO ADICIONADA
+  getUserGames: async () => {
+    try {
+      const response = await api.get('/users/games');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao buscar jogos do usuário' };
     }
   }
 };

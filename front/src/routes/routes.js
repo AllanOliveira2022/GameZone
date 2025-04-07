@@ -40,7 +40,7 @@ const AppRoutes = () => {
         <Route path="/home" element={<ProtectedRouteUser><Home /></ProtectedRouteUser>} />
         <Route path="/register" element={<Register />} />
         <Route path="/game/:id" element={<Game />} />
-        <Route path="/library" element={<Library />} />
+        <Route path="/library" element={<ProtectedRouteUser><Library /></ProtectedRouteUser>} />
 
         <Route path="/createGame" element={<ProtectedRouteAdmin><CreateGame/></ProtectedRouteAdmin>}/>
         <Route path="/homeAdmin" element={<ProtectedRouteAdmin><HomeAdmin /></ProtectedRouteAdmin>} />

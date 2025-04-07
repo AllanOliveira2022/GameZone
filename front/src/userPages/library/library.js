@@ -1,41 +1,66 @@
 import React, { useState, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { BuyService } from '../../services/buyService';
-import { Navigate } from 'react-router-dom';
+import UserService from '../../services/userService';
+import {
+  Box, Typography, Button, CircularProgress, Alert,
+  Grid, Card, CardMedia, CardContent, IconButton
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 function Library() {
-  const [purchases, setPurchases] = useState([]);
+  const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const limit = 12;
 
-  // Verificação de autenticação via localStorage
+  const navigate = useNavigate();
+
+  // Get authentication data from localStorage
   const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem('id');
 
   useEffect(() => {
-    fetchUserPurchases();
+    if (token && userId) {
+      fetchUserLibrary();
+    }
   }, [page]);
 
-  const fetchUserPurchases = async () => {
+  const fetchUserLibrary = async () => {
     try {
       setLoading(true);
-      
-      // Verifica se o usuário está autenticado
-      if (!token || !userId) {
-        setError("Você precisa estar logado para ver sua biblioteca.");
-        setLoading(false);
-        return;
-      }
+      setError(null);
 
-      const result = await BuyService.getUserBuys(userId, page, limit);
-      setPurchases(result.data);
-      setTotalPages(Math.ceil(result.total / limit));
-      setLoading(false);
+      const response = await UserService.getUserGames();
+      if (response && response.games && Array.isArray(response.games)) {
+        setGames(response.games);
+        setTotalPages(Math.ceil(response.games.length / limit));
+      } else {
+        const purchases = await BuyService.getUserBuys(userId, page, limit);
+        if (purchases && purchases.data && Array.isArray(purchases.data)) {
+          const extractedGames = purchases.data.flatMap(purchase =>
+            purchase.itensCompra.map(item => ({
+              ...item.jogo,
+              purchaseDate: purchase.createdAt,
+              purchaseId: purchase.id,
+            })).filter(Boolean)
+          );
+          setGames(extractedGames);
+          setTotalPages(Math.ceil(purchases.total / limit));
+        } else {
+          setGames([]);
+          setTotalPages(0);
+        }
+      }
     } catch (err) {
-      console.error('Erro ao buscar jogos da biblioteca:', err);
-      setError('Não foi possível carregar sua biblioteca. Tente novamente mais tarde.');
+      console.error('Erro ao carregar a biblioteca:', err);
+      setError('Erro ao carregar sua biblioteca. Por favor, tente novamente mais tarde.');
+      setGames([]);
+      setTotalPages(0);
+    } finally {
       setLoading(false);
     }
   };
@@ -52,115 +77,188 @@ function Library() {
     }
   };
 
-  // Redireciona se não estiver autenticado
+  const goToStore = () => {
+    navigate('/home');
+  };
+
+  const playGame = (gameId) => {
+    navigate(`/play/${gameId}`);
+  };
+
+  // Redirect if not authenticated
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-      </div>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh" sx={{ backgroundColor: 'var(--background-400)' }}>
+        <CircularProgress sx={{ color: 'var(--primary-500)' }} />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Erro! </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-      </div>
+      <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" minHeight="60vh" sx={{ backgroundColor: 'var(--background-400)', color: 'var(--text-primary)' }}>
+        <Alert severity="error" sx={{
+          width: '100%',
+          maxWidth: 600,
+          backgroundColor: 'var(--background-300)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--error)',
+          mb: 2
+        }}>
+          {error}
+        </Alert>
+        <Button variant="outlined" onClick={fetchUserLibrary} sx={{ color: 'var(--primary-500)', borderColor: 'var(--primary-500)', '&:hover': { backgroundColor: 'var(--primary-800)', borderColor: 'var(--primary-500)' } }}>
+          Tentar novamente
+        </Button>
+      </Box>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Minha Biblioteca</h1>
-      
-      {purchases.length === 0 ? (
-        <div className="bg-gray-100 p-8 rounded-lg text-center">
-          <h2 className="text-xl font-semibold text-gray-700">Sua biblioteca está vazia!</h2>
-          <p className="mt-2 text-gray-600">Você ainda não comprou nenhum jogo. Visite nossa loja para encontrar jogos incríveis.</p>
-          <button 
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => window.location.href = '/store'}
-          >
+    <Box sx={{
+      padding: { xs: 2, md: 4 },
+      backgroundColor: 'var(--background-400)',
+      minHeight: '100vh',
+      color: 'var(--text-primary)'
+    }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" component="h1" sx={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+          Minha Biblioteca
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={goToStore}
+          sx={{
+            color: 'var(--primary-500)',
+            borderColor: 'var(--primary-500)',
+            '&:hover': {
+              backgroundColor: 'var(--primary-800)',
+              borderColor: 'var(--primary-500)'
+            }
+          }}
+        >
+          Voltar para a Loja
+        </Button>
+      </Box>
+
+      {games.length === 0 ? (
+        <Box sx={{
+          backgroundColor: 'var(--background-300)',
+          padding: 4,
+          borderRadius: 2,
+          textAlign: 'center'
+        }}>
+          <Typography variant="h6" sx={{ color: 'var(--text-muted)', mb: 2 }}>
+            Sua biblioteca está vazia!
+          </Typography>
+          <Typography sx={{ color: 'var(--text-primary)', mb: 3 }}>
+            Você ainda não adquiriu nenhum jogo. Visite a loja para encontrar jogos incríveis.
+          </Typography>
+          <Button variant="contained" onClick={goToStore} sx={{ backgroundColor: 'var(--primary-500)', color: 'var(--background-400)', '&:hover': { backgroundColor: 'var(--primary-400)' } }}>
             Ir para a Loja
-          </button>
-        </div>
+          </Button>
+        </Box>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {purchases.map((purchase) => (
-              <div key={purchase.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                {purchase.game && (
-                  <>
-                    <div className="relative">
-                      <img 
-                        src={purchase.game.coverImage || '/placeholder-game.jpg'} 
-                        alt={purchase.game.title} 
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent text-white p-3">
-                        <h3 className="font-bold text-lg truncate">{purchase.game.title}</h3>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-sm text-gray-600 mb-2">
-                        Data da compra: {new Date(purchase.createdAt).toLocaleDateString()}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-700">
-                          {purchase.game.developer}
-                        </span>
-                        <button
-                          className="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-1 px-3 rounded"
-                          onClick={() => window.location.href = `/play/${purchase.game.id}`}
-                        >
-                          Jogar
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+          <Grid container spacing={3}>
+            {games.map((game) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={game.id}>
+                <Card sx={{
+                  height: '100%',
+                  borderRadius: 2,
+                  backgroundColor: 'var(--background-300)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  transition: 'transform 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'scale(1.03)',
+                    boxShadow: '0 6px 18px rgba(0,0,0,0.3)'
+                  }
+                }}>
+                  <CardMedia
+                    component="img"
+                    height="160"
+                    image={game.coverImage || '/placeholder-game.jpg'}
+                    alt={game.name || 'Game'}
+                    sx={{ objectFit: 'cover', borderBottom: '2px solid var(--primary-700)' }}
+                  />
+                  <CardContent sx={{ flexGrow: 1, padding: 2 }}>
+                    <Typography gutterBottom variant="h6" component="h2" sx={{ color: 'var(--text-secondary)', fontWeight: 'bold', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                      {game.name || 'Unnamed Game'}
+                    </Typography>
+                    {game.purchaseDate && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.8rem' }}>
+                        Adquirido em: {new Date(game.purchaseDate).toLocaleDateString()}
+                      </Typography>
+                    )}
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {game.description && game.description.length > 30 ? `${game.description.substring(0, 30)}...` : game.description}
+                    </Typography>
+                  </CardContent>
+                  <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', backgroundColor: 'var(--background-200)', borderTop: '1px solid var(--primary-700)' }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => playGame(game.id)}
+                      startIcon={<PlayArrowIcon />}
+                      sx={{
+                        backgroundColor: 'var(--primary-500)',
+                        color: 'var(--background-400)',
+                        '&:hover': { backgroundColor: 'var(--primary-400)' },
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      Jogar
+                    </Button>
+                  </Box>
+                </Card>
+              </Grid>
             ))}
-          </div>
+          </Grid>
 
-          {/* Paginação */}
           {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <nav className="inline-flex rounded-md shadow">
-                <button
-                  onClick={handlePreviousPage}
-                  disabled={page === 1}
-                  className={`px-4 py-2 rounded-l-md border ${
-                    page === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Anterior
-                </button>
-                <div className="px-4 py-2 bg-blue-600 text-white font-medium border-t border-b">
-                  {page} de {totalPages}
-                </div>
-                <button
-                  onClick={handleNextPage}
-                  disabled={page === totalPages}
-                  className={`px-4 py-2 rounded-r-md border ${
-                    page === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Próximo
-                </button>
-              </nav>
-            </div>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Button
+                onClick={handlePreviousPage}
+                disabled={page === 1}
+                sx={{
+                  backgroundColor: page === 1 ? 'var(--background-300)' : 'var(--primary-500)',
+                  color: page === 1 ? 'var(--text-muted)' : 'var(--background-400)',
+                  '&:hover': { backgroundColor: page === 1 ? 'var(--background-300)' : 'var(--primary-400)' },
+                  mr: 2,
+                  '&:disabled': { color: 'var(--text-muted)', backgroundColor: 'var(--background-300)' }
+                }}
+              >
+                Anterior
+              </Button>
+              <Typography sx={{ color: 'var(--text-primary)', alignSelf: 'center' }}>
+                Página {page} de {totalPages}
+              </Typography>
+              <Button
+                onClick={handleNextPage}
+                disabled={page === totalPages}
+                sx={{
+                  backgroundColor: page === totalPages ? 'var(--background-300)' : 'var(--primary-500)',
+                  color: page === totalPages ? 'var(--text-muted)' : 'var(--background-400)',
+                  '&:hover': { backgroundColor: page === totalPages ? 'var(--background-300)' : 'var(--primary-400)' },
+                  ml: 2,
+                  '&:disabled': { color: 'var(--text-muted)', backgroundColor: 'var(--background-300)' }
+                }}
+              >
+                Próxima
+              </Button>
+            </Box>
           )}
         </>
       )}
-    </div>
+    </Box>
   );
 }
 
